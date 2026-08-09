@@ -241,10 +241,10 @@
 }
 
 /* ===================================================
-   RESPONSIVE — hide sidebar on actual mobile only
+   RESPONSIVE — hide sidebar on mobile/tablet
    =================================================== */
 
-/* Only hide sidebar on phones (<=480px); tablets and up keep it */
+/* At/below 820px: sidebar hidden, content fills full width */
 @media (max-width: 820px) {
   .sidebar {
     display: none;

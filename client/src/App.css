@@ -44,17 +44,27 @@
 }
 
 /* ===================================================
-   RESPONSIVE — middle bar at small screens
+   RESPONSIVE — mobile layout at 820px and below
    =================================================== */
 
-/* At/below 480px: sidebar is hidden, content fills full width */
-@media (max-width: 480px) {
+/* Header stays, sidebar hidden (in Sidebar.css).
+   Content fills the full remaining height with zero gaps. */
+@media (max-width: 820px) {
+  .app-layout {
+    padding: 0;
+    gap: 0;
+  }
+
   .middle-bar {
     gap: 0;
   }
 
   .content {
-    border-radius: 0.5rem;
+    border-radius: 0;    /* flush edge-to-edge */
+    overflow-y: auto;    /* allow scroll on the content itself */
+  }
+
+  .content-scroll {
+    padding: 1rem;       /* slightly tighter padding on mobile */
   }
 }
-
