@@ -7,7 +7,7 @@ const Sidebar = () => {
   const sidebarRef = useRef(null)
 
   const MIN_WIDTH = 320
-  const MAX_WIDTH = 420
+  const MAX_WIDTH = 380
 
   const startResizing = (e) => {
     e.preventDefault()
