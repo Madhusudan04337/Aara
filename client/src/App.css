@@ -16,6 +16,7 @@
 
 .content {
   flex-grow: 1;
+  min-width: 0; /* lets this flex child shrink without pushing sidebar */
   background-color: #121212;
   overflow-y: hidden;
   border-radius: 0.5rem;
@@ -41,3 +42,19 @@
   background-color: rgba(255, 255, 255, 0.35);
   border-radius: 4px;
 }
+
+/* ===================================================
+   RESPONSIVE — middle bar at small screens
+   =================================================== */
+
+/* At/below 480px: sidebar is hidden, content fills full width */
+@media (max-width: 480px) {
+  .middle-bar {
+    gap: 0;
+  }
+
+  .content {
+    border-radius: 0.5rem;
+  }
+}
+

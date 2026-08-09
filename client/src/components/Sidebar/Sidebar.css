@@ -1,12 +1,16 @@
 /* ===== SIDEBAR ===== */
 .sidebar {
-  width: 390px;
+  /* fluid between 344px and 390px, shrinks with viewport */
+  width: clamp(344px, 28vw, 390px);
+  min-width: 344px;
+  max-width: 390px;
   flex-shrink: 0;
   background-color: #121212;
   border-radius: 0.5rem;
   display: flex;
   flex-direction: column;
   min-height: 0;
+  overflow: hidden;
 }
 
 /* ---- Library Header ---- */
@@ -92,6 +96,7 @@
   height: 100%;
   overflow-y: auto;
   scrollbar-width: none;
+  padding: 0 !important;
 }
 
 .content-scroll::-webkit-scrollbar {
@@ -233,4 +238,15 @@
 
 .lang-btn:active {
   border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* ===================================================
+   RESPONSIVE — hide sidebar on actual mobile only
+   =================================================== */
+
+/* Only hide sidebar on phones (<=480px); tablets and up keep it */
+@media (max-width: 820px) {
+  .sidebar {
+    display: none;
+  }
 }
