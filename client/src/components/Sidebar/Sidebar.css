@@ -1,16 +1,46 @@
 /* ===== SIDEBAR ===== */
 .sidebar {
-  /* fluid between 344px and 390px, shrinks with viewport */
-  width: clamp(344px, 28vw, 390px);
-  min-width: 344px;
-  max-width: 390px;
+  min-width: 320px;
+  max-width: 420px;
   flex-shrink: 0;
   background-color: #121212;
   border-radius: 0.5rem;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  overflow: hidden;
+  position: relative;
+}
+
+.sidebar.resizing {
+  user-select: none;
+}
+
+/* Resize handle placed between sidebar and main content */
+.sidebar-resize-handle {
+  position: absolute;
+  top: 0;
+  right: -0.5rem; /* center in the 0.5rem gap between sidebar and main content */
+  width: 0.5rem;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-resize-handle::after {
+  content: '';
+  width: 2px;
+  height: 95%;
+  border-radius: 2px;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+}
+
+.sidebar-resize-handle:hover::after,
+.sidebar.resizing .sidebar-resize-handle::after {
+  background-color: rgba(255, 255, 255, 0.4);
 }
 
 /* ---- Library Header ---- */
@@ -63,11 +93,25 @@
   color: #a7a7a7;
   border-radius: 50%;
   font-size: 16px;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease, width 0.2s ease, padding 0.2s ease;
+}
+
+.library-add-btn--expanded .library-add-btn__icon {
+  width: auto;
+  border-radius: 20px;
+  padding: 0 14px;
+  gap: 8px;
+  background-color: #1f1f1f;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.library-add-btn__text {
+  font-family: "Montserrat", sans-serif;
 }
 
 .library-add-btn:hover .library-add-btn__icon {
-  background-color: #1f1f1f;
+  background-color: #2a2a2a;
   color: #ffffff;
 }
 
