@@ -1,0 +1,43 @@
+/* ===== APP LAYOUT ===== */
+.app-layout {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem;
+  gap: 0.5rem;
+}
+
+.middle-bar {
+  display: flex;
+  flex: 1;
+  gap: 0.5rem;
+  min-height: 0;
+}
+
+.content {
+  flex-grow: 1;
+  background-color: #121212;
+  overflow-y: hidden;
+  border-radius: 0.5rem;
+  min-height: 0;
+}
+
+.content-scroll {
+  height: 100%;
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: 1.5rem;
+}
+
+.content-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.content-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.content-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.35);
+  border-radius: 4px;
+}
