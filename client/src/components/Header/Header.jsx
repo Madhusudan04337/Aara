@@ -4,16 +4,17 @@ import './Header.css'
 const Header = () => {
   return (
     <header className="top-bar" role="banner">
-      {/* Left - Logo + Nav */}
+
+      {/* ── DESKTOP LEFT: Logo + Home btn ── */}
       <div className="top-bar__left">
         <SpotifyLogo />
-        <button className="top-bar__nav-btn" aria-label="Go to home">
+        <button className="top-bar__nav-btn top-bar__desktop-only" aria-label="Go to home">
           <i className="fa-solid fa-house" />
         </button>
       </div>
 
-      {/* Center - Search */}
-      <div className="search-bar" role="search">
+      {/* ── DESKTOP CENTER: Search bar ── */}
+      <div className="search-bar top-bar__desktop-only" role="search">
         <i className="fa-solid fa-magnifying-glass search-bar__icon" aria-hidden="true" />
         <input
           id="search-input"
@@ -28,8 +29,8 @@ const Header = () => {
         </button>
       </div>
 
-      {/* Right - Nav Links + Actions */}
-      <div className="top-bar__right">
+      {/* ── DESKTOP RIGHT: Nav links + Actions ── */}
+      <div className="top-bar__right top-bar__desktop-only">
         <nav className="top-bar__nav-links" aria-label="Main navigation">
           <a className="top-bar__nav-link" href="#" id="nav-premium">Premium</a>
           <a className="top-bar__nav-link" href="#" id="nav-support">Support</a>
@@ -47,6 +48,15 @@ const Header = () => {
           <button className="top-bar__login-btn" id="btn-login">Log in</button>
         </div>
       </div>
+
+      {/* ── MOBILE RIGHT: Open App + Hamburger ── */}
+      <div className="top-bar__mobile-actions top-bar__mobile-only">
+        <button className="top-bar__open-app-btn" id="btn-open-app">Open App</button>
+        <button className="top-bar__hamburger" id="btn-hamburger" aria-label="Open menu" aria-haspopup="true">
+          <i className="fa-solid fa-bars" />
+        </button>
+      </div>
+
     </header>
   )
 }
