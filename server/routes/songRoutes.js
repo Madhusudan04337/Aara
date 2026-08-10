@@ -4,13 +4,20 @@ import { uploadSongFiles, cloudinary } from '../config/cloudinary.js'
 
 const router = express.Router()
 
-// GET /api/songs - Fetch all songs
+// GET /api/songs - Fetch all songs (with fallback if DB connection fails)
 router.get('/', async (req, res) => {
   try {
     const songs = await Song.find().sort({ createdAt: -1 })
     res.status(200).json({ success: true, count: songs.length, data: songs })
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message })
+    console.error('Database query error:', error.message)
+    // Return empty array gracefully instead of 500 server crash
+    res.status(200).json({
+      success: true,
+      count: 0,
+      data: [],
+      warning: 'Database connection offline or unreachable. Please check internet connection & MongoDB URI.',
+    })
   }
 })
 

@@ -20,19 +20,26 @@ app.get('/', (req, res) => {
   res.send('Aara Spotify Clone API Server Running')
 })
 
-// Connect to MongoDB
+// Start server first
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`)
+})
+
+// Connect to MongoDB asynchronously
 const connectDB = async () => {
+  if (!process.env.MONGODB_URI) {
+    console.warn('⚠️ MONGODB_URI is not set in .env file!')
+    return
+  }
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI)
+    const conn = await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of hanging
+    })
     console.log(`MongoDB Connected: ${conn.connection.host}`)
   } catch (error) {
-    console.error(`MongoDB Connection Error: ${error.message}`)
-    process.exit(1)
+    console.error(`⚠️ MongoDB Connection Warning: ${error.message}`)
   }
 }
 
-connectDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`)
-  })
-})
+connectDB()
+
