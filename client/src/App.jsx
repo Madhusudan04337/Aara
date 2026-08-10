@@ -1,5 +1,6 @@
 import Header from './components/Header/Header'
 import Sidebar from './components/Sidebar/Sidebar'
+import MainContent from './components/MainContent/MainContent'
 import PlayerBar from './components/PlayerBar/PlayerBar'
 import './App.css'
 
@@ -13,9 +14,11 @@ function App() {
       <div className="middle-bar">
         <Sidebar />
 
-        {/* Content area - to be built next */}
+        {/* Content area */}
         <main className="content" role="main" aria-label="Main content">
-          <div className="content-scroll" />
+          <div className="content-scroll">
+            <MainContent />
+          </div>
         </main>
       </div>
 
