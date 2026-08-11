@@ -1,15 +1,24 @@
 import { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import './MainContent.css'
 
 const SHOW_ALL_THRESHOLD = 5
 const API_URL = 'http://localhost:5000/api/songs'
 
+const categories = [
+  { index: 1, id: 'trending-songs', title: 'Trending songs' },
+  { index: 2, id: 'popular-artists', title: 'Popular artists' },
+  { index: 3, id: 'popular-albums', title: 'Popular albums' },
+  { index: 4, id: 'popular-radio', title: 'Popular radio' },
+  { index: 5, id: 'featured-charts', title: 'Featured Charts' },
+]
+
 const MainContent = () => {
+  const navigate = useNavigate()
   const [songs, setSongs] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [hoveredCard, setHoveredCard] = useState(null)
-  const [activeCategory, setActiveCategory] = useState(null)
   const [scrollPositions, setScrollPositions] = useState({})
   const scrollContainersRef = useRef({})
 
@@ -48,9 +57,9 @@ const MainContent = () => {
 
   useEffect(() => {
     if (!loading && songs.length > 0) {
-      updateScrollState('trending-songs')
+      categories.forEach((cat) => updateScrollState(cat.id))
     }
-  }, [loading, songs, activeCategory])
+  }, [loading, songs])
 
   const handleScroll = (key) => {
     updateScrollState(key)
@@ -66,6 +75,11 @@ const MainContent = () => {
     if (scrollContainersRef.current[key]) {
       scrollContainersRef.current[key].scrollBy({ left: 500, behavior: 'smooth' })
     }
+  }
+
+  const handleShowAll = (identifier) => {
+    // Navigate to /session/:id URL route using category index or id
+    navigate(`/session/${identifier}`)
   }
 
   if (loading) {
@@ -88,120 +102,90 @@ const MainContent = () => {
     )
   }
 
-  // If a category view ("Show all") is selected, render full grid view page
-  if (activeCategory === 'trending-songs') {
-    return (
-      <div className="main-content category-view">
-        <div className="category-header">
-          <h2>Trending songs</h2>
-        </div>
-
-        <div className="cards-grid category-grid">
-          {songs.map((song) => (
-            <div
-              key={`full-${song._id || song.id}`}
-              className="card"
-              onMouseEnter={() => setHoveredCard(`full-${song._id || song.id}`)}
-              onMouseLeave={() => setHoveredCard(null)}
-            >
-              <div className="card-image-container">
-                <img src={song.imageUrl || song.image} alt={song.title} className="card-image" />
-                <button
-                  className={`play-btn ${
-                    hoveredCard === `full-${song._id || song.id}` ? 'play-btn--visible' : ''
-                  }`}
-                  aria-label={`Play ${song.title}`}
-                >
-                  <i className="fa-solid fa-play" />
-                </button>
-              </div>
-              <div className="card-info">
-                <h3 className="card-title" title={song.title}>{song.title}</h3>
-                <p className="card-subtitle" title={song.artist}>{song.artist}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  const hasShowAll = songs.length > SHOW_ALL_THRESHOLD
-  const scrollState = scrollPositions['trending-songs'] || { canScrollLeft: false, canScrollRight: true }
-
   return (
     <div className="main-content">
-      <section className="content-section">
-        <div className="section-header">
-          {hasShowAll ? (
-            <h2 className="section-title-link" onClick={() => setActiveCategory('trending-songs')}>
-              Trending songs
-            </h2>
-          ) : (
-            <h2 className="section-title-static">Trending songs</h2>
-          )}
-          {hasShowAll && (
-            <div className="section-header-actions">
-              <button className="show-all-btn" onClick={() => setActiveCategory('trending-songs')}>
-                Show all
-              </button>
-            </div>
-          )}
-        </div>
+      {categories.map((category) => {
+        // Filter songs for each category (defaulting to all songs for trending-songs)
+        const categorySongs = category.id === 'trending-songs' 
+          ? songs 
+          : songs.filter((s) => s.category === category.id)
 
-        <div className="row-scroll-wrapper">
-          {scrollState.canScrollLeft && (
-            <button
-              className="scroll-btn scroll-btn--left"
-              onClick={() => scrollLeft('trending-songs')}
-              aria-label="Scroll left"
-            >
-              <i className="fa-solid fa-chevron-left" />
-            </button>
-          )}
+        if (categorySongs.length === 0 && category.id !== 'trending-songs') {
+          return null
+        }
 
-          <div
-            className="cards-row"
-            ref={(el) => (scrollContainersRef.current['trending-songs'] = el)}
-            onScroll={() => handleScroll('trending-songs')}
-          >
-            {songs.map((song) => (
-              <div
-                key={`trending-${song._id || song.id}`}
-                className="card"
-                onMouseEnter={() => setHoveredCard(`trending-${song._id || song.id}`)}
-                onMouseLeave={() => setHoveredCard(null)}
-              >
-                <div className="card-image-container">
-                  <img src={song.imageUrl || song.image} alt={song.title} className="card-image" />
-                  <button
-                    className={`play-btn ${
-                      hoveredCard === `trending-${song._id || song.id}` ? 'play-btn--visible' : ''
-                    }`}
-                    aria-label={`Play ${song.title}`}
-                  >
-                    <i className="fa-solid fa-play" />
+        const currentSongs = categorySongs.length > 0 ? categorySongs : songs
+        const hasShowAll = currentSongs.length > SHOW_ALL_THRESHOLD
+        const scrollState = scrollPositions[category.id] || { canScrollLeft: false, canScrollRight: true }
+
+        return (
+          <section key={category.id} className="content-section">
+            <div className="section-header">
+              <h2 className="section-title-static">{category.title}</h2>
+              {hasShowAll && (
+                <div className="section-header-actions">
+                  <button className="show-all-btn" onClick={() => handleShowAll(category.index)}>
+                    Show all
                   </button>
                 </div>
-                <div className="card-info">
-                  <h3 className="card-title" title={song.title}>{song.title}</h3>
-                  <p className="card-subtitle" title={song.artist}>{song.artist}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+              )}
+            </div>
 
-          {scrollState.canScrollRight && (
-            <button
-              className="scroll-btn scroll-btn--right"
-              onClick={() => scrollRight('trending-songs')}
-              aria-label="Scroll right"
-            >
-              <i className="fa-solid fa-chevron-right" />
-            </button>
-          )}
-        </div>
-      </section>
+            <div className="row-scroll-wrapper">
+              {scrollState.canScrollLeft && (
+                <button
+                  className="scroll-btn scroll-btn--left"
+                  onClick={() => scrollLeft(category.id)}
+                  aria-label="Scroll left"
+                >
+                  <i className="fa-solid fa-chevron-left" />
+                </button>
+              )}
+
+              <div
+                className="cards-row"
+                ref={(el) => (scrollContainersRef.current[category.id] = el)}
+                onScroll={() => handleScroll(category.id)}
+              >
+                {currentSongs.map((song) => (
+                  <div
+                    key={`${category.id}-${song._id || song.id}`}
+                    className="card"
+                    onMouseEnter={() => setHoveredCard(`${category.id}-${song._id || song.id}`)}
+                    onMouseLeave={() => setHoveredCard(null)}
+                  >
+                    <div className="card-image-container">
+                      <img src={song.imageUrl || song.image} alt={song.title} className="card-image" />
+                      <button
+                        className={`play-btn ${
+                          hoveredCard === `${category.id}-${song._id || song.id}` ? 'play-btn--visible' : ''
+                        }`}
+                        aria-label={`Play ${song.title}`}
+                      >
+                        <i className="fa-solid fa-play" />
+                      </button>
+                    </div>
+                    <div className="card-info">
+                      <h3 className="card-title" title={song.title}>{song.title}</h3>
+                      <p className="card-subtitle" title={song.artist}>{song.artist}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {scrollState.canScrollRight && (
+                <button
+                  className="scroll-btn scroll-btn--right"
+                  onClick={() => scrollRight(category.id)}
+                  aria-label="Scroll right"
+                >
+                  <i className="fa-solid fa-chevron-right" />
+                </button>
+              )}
+            </div>
+          </section>
+        )
+      })}
     </div>
   )
 }

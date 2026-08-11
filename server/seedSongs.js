@@ -55,8 +55,9 @@ const seedDB = async () => {
         title: song.title,
         artist: song.artist,
         category: 'trending-songs',
+        categoryIndex: 1,
         imageUrl: uploadRes.secure_url,
-        cloudinaryPublicId: uploadRes.public_id,
+        imagePublicId: uploadRes.public_id,
       })
 
       await newSong.save()

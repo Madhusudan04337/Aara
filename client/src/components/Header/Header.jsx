@@ -1,14 +1,23 @@
+import { Link, useNavigate } from 'react-router-dom'
 import SpotifyLogo from '../SpotifyLogo/SpotifyLogo'
 import './Header.css'
 
 const Header = () => {
+  const navigate = useNavigate()
+
   return (
     <header className="top-bar" role="banner">
 
       {/* ── DESKTOP LEFT: Logo + Home btn ── */}
       <div className="top-bar__left">
-        <SpotifyLogo />
-        <button className="top-bar__nav-btn top-bar__desktop-only" aria-label="Go to home">
+        <Link to="/" className="top-bar__logo-link">
+          <SpotifyLogo />
+        </Link>
+        <button
+          className="top-bar__nav-btn top-bar__desktop-only"
+          aria-label="Go to home"
+          onClick={() => navigate('/')}
+        >
           <i className="fa-solid fa-house" />
         </button>
       </div>
@@ -24,7 +33,7 @@ const Header = () => {
           aria-label="Search for songs, artists, or podcasts"
         />
         <div className="search-bar__divider" aria-hidden="true" />
-        <button className="search-bar__browse-btn" aria-label="Browse categories">
+        <button className="search-bar__browse-btn" aria-label="Browse categories" title="Browse">
           <i className="fa-solid fa-table-cells-large" />
         </button>
       </div>
@@ -32,18 +41,15 @@ const Header = () => {
       {/* ── DESKTOP RIGHT: Nav links + Actions ── */}
       <div className="top-bar__right top-bar__desktop-only">
         <nav className="top-bar__nav-links" aria-label="Main navigation">
-          <a className="top-bar__nav-link" href="#" id="nav-premium">Premium</a>
-          <a className="top-bar__nav-link" href="#" id="nav-support">Support</a>
-          <a className="top-bar__nav-link" href="#" id="nav-download">Download</a>
+          <a className="top-bar__nav-link" href="#" id="nav-explore">Explore</a>
+          <a className="top-bar__nav-link" href="#" id="nav-browse">Browse</a>
+          <a className="top-bar__nav-link" href="#" id="nav-live">Live</a>
+          <a className="top-bar__nav-link top-bar__premium-link" href="#" id="nav-premium">
+            <span className="top-bar__premium-sparkle">✦</span> Premium
+          </a>
         </nav>
 
-        <div className="top-bar__divider" aria-hidden="true" />
-
         <div className="top-bar__actions">
-          <button className="top-bar__install-btn" id="btn-install-app">
-            <i className="fa-solid fa-arrow-down-to-bracket" aria-hidden="true" />
-            <span>Install App</span>
-          </button>
           <button className="top-bar__signup-btn" id="btn-signup">Sign up</button>
           <button className="top-bar__login-btn" id="btn-login">Log in</button>
         </div>

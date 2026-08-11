@@ -4,19 +4,51 @@ import { uploadSongFiles, cloudinary } from '../config/cloudinary.js'
 
 const router = express.Router()
 
-// GET /api/songs - Fetch all songs (with fallback if DB connection fails)
+// GET /api/songs - Fetch all songs (with optional category filter or DB fallback)
 router.get('/', async (req, res) => {
   try {
-    const songs = await Song.find().sort({ createdAt: -1 })
+    const { category } = req.query
+    const query = category ? { category } : {}
+    const songs = await Song.find(query).sort({ createdAt: -1 })
     res.status(200).json({ success: true, count: songs.length, data: songs })
   } catch (error) {
     console.error('Database query error:', error.message)
-    // Return empty array gracefully instead of 500 server crash
     res.status(200).json({
       success: true,
       count: 0,
       data: [],
       warning: 'Database connection offline or unreachable. Please check internet connection & MongoDB URI.',
+    })
+  }
+})
+
+// GET /api/songs/category/:categoryId - Fetch songs for a specific category (using MongoDB Index)
+router.get('/category/:categoryId', async (req, res) => {
+  try {
+    const { categoryId } = req.params
+    const isNumeric = !isNaN(Number(categoryId))
+    
+    // Efficient MongoDB query utilizing categoryIndex or category index
+    const query = isNumeric 
+      ? { categoryIndex: Number(categoryId) } 
+      : { category: categoryId }
+
+    let songs = await Song.find(query).sort({ createdAt: -1 })
+
+    // Fallback if numeric index 1 has no specific query match yet
+    if (songs.length === 0 && (categoryId === '1' || categoryId === 'trending-songs')) {
+      songs = await Song.find().sort({ createdAt: -1 })
+    }
+
+    res.status(200).json({ success: true, categoryId, count: songs.length, data: songs })
+  } catch (error) {
+    console.error('Category query error:', error.message)
+    res.status(200).json({
+      success: true,
+      categoryId: req.params.categoryId,
+      count: 0,
+      data: [],
+      warning: 'Database connection offline or unreachable.',
     })
   }
 })
