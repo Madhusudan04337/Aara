@@ -82,16 +82,6 @@ const MainContent = () => {
     navigate(`/session/${identifier}`)
   }
 
-  if (loading) {
-    return (
-      <div className="main-content">
-        <div className="loading-container">
-          <p>Loading songs from database...</p>
-        </div>
-      </div>
-    )
-  }
-
   if (error) {
     return (
       <div className="main-content">
