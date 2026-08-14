@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import SpotifyLogo from '../SpotifyLogo/SpotifyLogo'
+import AaraLogo from '../AaraLogo/AaraLogo'
 import './Header.css'
 
 const Header = () => {
@@ -11,7 +11,7 @@ const Header = () => {
       {/* ── DESKTOP LEFT: Logo + Home btn ── */}
       <div className="top-bar__left">
         <Link to="/" className="top-bar__logo-link">
-          <SpotifyLogo />
+          <AaraLogo />
         </Link>
         <button
           className="top-bar__nav-btn top-bar__desktop-only"

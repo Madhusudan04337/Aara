@@ -1,4 +1,4 @@
-const SpotifyLogo = () => (
+const AaraLogo = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="62"
@@ -26,4 +26,4 @@ const SpotifyLogo = () => (
   </svg>
 )
 
-export default SpotifyLogo
+export default AaraLogo
