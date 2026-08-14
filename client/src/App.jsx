@@ -3,35 +3,38 @@ import Header from './components/Header/Header'
 import Sidebar from './components/Sidebar/Sidebar'
 import MainContent from './components/MainContent/MainContent'
 import CategorySessionView from './components/CategorySessionView/CategorySessionView'
+import SignupPage from './components/Auth/SignupPage'
 import PlayerBar from './components/PlayerBar/PlayerBar'
 import './App.css'
 
 function App() {
   return (
-    <div className="app-layout">
-      {/* Top Navigation Bar */}
-      <Header />
+    <Routes>
+      {/* Full-screen Signup Page */}
+      <Route path="/signup" element={<SignupPage />} />
 
-      {/* Middle: Sidebar + Main Content */}
-      <div className="middle-bar">
-        <Sidebar />
-
-        {/* Content area */}
-        <main className="content" role="main" aria-label="Main content">
-          <div className="content-scroll">
-            <Routes>
-              {/* Home Overview Page */}
-              <Route path="/" element={<MainContent />} />
-              {/* Category Session Page: /session/:id */}
-              <Route path="/session/:id" element={<CategorySessionView />} />
-            </Routes>
+      {/* Main Layout Pages */}
+      <Route
+        path="*"
+        element={
+          <div className="app-layout">
+            <Header />
+            <div className="middle-bar">
+              <Sidebar />
+              <main className="content" role="main" aria-label="Main content">
+                <div className="content-scroll">
+                  <Routes>
+                    <Route path="/" element={<MainContent />} />
+                    <Route path="/session/:id" element={<CategorySessionView />} />
+                  </Routes>
+                </div>
+              </main>
+            </div>
+            <PlayerBar />
           </div>
-        </main>
-      </div>
-
-      {/* Bottom Player / Signup Bar */}
-      <PlayerBar />
-    </div>
+        }
+      />
+    </Routes>
   )
 }
 

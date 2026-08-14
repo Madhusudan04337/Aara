@@ -50,7 +50,7 @@ const Header = () => {
         </nav>
 
         <div className="top-bar__actions">
-          <button className="top-bar__signup-btn" id="btn-signup">Sign up</button>
+          <button className="top-bar__signup-btn" id="btn-signup" onClick={() => navigate('/signup')}>Sign up</button>
           <button className="top-bar__login-btn" id="btn-login">Log in</button>
         </div>
       </div>
