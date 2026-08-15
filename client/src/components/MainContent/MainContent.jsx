@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './MainContent.css'
 import { staticArtists } from '../../data/artistsData'
+import AaraLogo from '../AaraLogo/AaraLogo'
 
 const SHOW_ALL_THRESHOLD = 5
 const API_URL = 'http://localhost:5000/api/songs'
@@ -76,6 +77,8 @@ const MainContent = () => {
   const trendingScrollState = scrollPositions['trending-songs'] || { canScrollLeft: false, canScrollRight: true }
   const artistsScrollState = scrollPositions['popular-artists'] || { canScrollLeft: false, canScrollRight: true }
 
+  const [showPromoBanner, setShowPromoBanner] = useState(true)
+
   if (error) {
     return (
       <div className="main-content">
@@ -88,6 +91,47 @@ const MainContent = () => {
 
   return (
     <div className="main-content">
+      {/* ── MOBILE / TABLET PROMO CARD (AFTER HEADER) ── */}
+      {showPromoBanner && (
+        <div className="home-promo-card">
+          <button
+            className="home-promo-card__close"
+            aria-label="Close banner"
+            onClick={() => setShowPromoBanner(false)}
+          >
+            <i className="fa-solid fa-xmark" />
+          </button>
+
+          <div className="home-promo-card__header">
+            <div className="home-promo-card__logo-wrapper">
+              <AaraLogo />
+            </div>
+            <span className="home-promo-card__brand">Premium</span>
+          </div>
+
+          <h2 className="home-promo-card__headline">
+            Listen without limits. Try 1 year of Premium Standard for ₹799.
+          </h2>
+
+          <p className="home-promo-card__subtext">
+            Only ₹139/month after. Cancel anytime.
+          </p>
+
+          <div className="home-promo-card__actions">
+            <button className="home-promo-card__btn-primary">
+              Try 1 year for ₹799
+            </button>
+            <button className="home-promo-card__btn-secondary">
+              View all plans
+            </button>
+          </div>
+
+          <p className="home-promo-card__disclaimer">
+            Premium Standard only. ₹799 for 1 year, then ₹139 per month after. Limited Eligibility. <a href="#">Terms apply</a>. Offer ends October 15, 2026.
+          </p>
+        </div>
+      )}
+
       {/* ── 1. TRENDING SONGS SECTION ── */}
       <section className="content-section">
         <div className="section-header">
