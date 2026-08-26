@@ -5,6 +5,7 @@ import Sidebar from './components/Sidebar/Sidebar'
 import MainContent from './components/MainContent/MainContent'
 import CategorySessionView from './components/CategorySessionView/CategorySessionView'
 import SignupPage from './components/Auth/SignupPage'
+import LoginPage from './components/Auth/LoginPage'
 import PlayerBar from './components/PlayerBar/PlayerBar'
 import './App.css'
 
@@ -14,8 +15,9 @@ function App() {
 
   return (
     <Routes>
-      {/* Full-screen Signup Page */}
+      {/* Full-screen Auth Pages */}
       <Route path="/signup" element={<SignupPage />} />
+      <Route path="/login" element={<LoginPage />} />
 
       {/* Main Layout Pages */}
       <Route

@@ -24,7 +24,7 @@ const SignupPage = () => {
     setError(null)
 
     try {
-      const res = await fetch('http://localhost:5000/api/auth/signup', {
+      const res = await fetch('http://localhost:5000/api/v1/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, name }),
@@ -32,9 +32,13 @@ const SignupPage = () => {
 
       const data = await res.json()
       if (data.success) {
+        if (data.data?.token) {
+          localStorage.setItem('aara_token', data.data.token)
+          localStorage.setItem('aara_user', JSON.stringify(data.data.user))
+        }
         navigate('/')
       } else {
-        setError(data.error || 'Signup failed')
+        setError(data.message || 'Signup failed')
       }
     } catch (err) {
       setError('Server error. Please check your backend connection.')
@@ -113,21 +117,8 @@ const SignupPage = () => {
           </form>
         )}
 
-        {/* Divider / Or */}
-        <div className="signup-or-divider">Or</div>
-
-        {/* Alternative Signups */}
-        <div className="signup-alt-buttons">
-          <button className="signup-alt-btn">
-            Sign up with phone number
-          </button>
-          <button className="signup-alt-btn">
-            Sign up with Google
-          </button>
-        </div>
-
         {/* Footer */}
-        <div className="signup-footer">
+        <div className="signup-footer" style={{ marginTop: '24px' }}>
           <p className="signup-footer-text">Already have account ?</p>
           <Link to="/login" className="signup-login-link">
             Log in
