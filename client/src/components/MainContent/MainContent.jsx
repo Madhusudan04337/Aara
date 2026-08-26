@@ -184,6 +184,16 @@ const MainContent = ({ searchQuery = '', onSelectTrack }) => {
                     <p className="card-subtitle" title={track.artist_name || track.artistName}>
                       {track.artist_name || track.artistName}
                     </p>
+                    {track.album_name && (
+                      <p style={{ fontSize: '11px', color: '#a7a7a7', margin: '2px 0 0 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={track.album_name}>
+                        Album: {track.album_name}
+                      </p>
+                    )}
+                    {track.duration > 0 && (
+                      <p style={{ fontSize: '11px', color: '#a7a7a7', margin: '2px 0 0 0' }}>
+                        Duration: {Math.floor(track.duration / 60)}:{String(track.duration % 60).padStart(2, '0')}
+                      </p>
+                    )}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
                       {(track.license_ccurl || track.licenseUrl) && (
                         <a
