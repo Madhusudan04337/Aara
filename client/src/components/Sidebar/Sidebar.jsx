@@ -1,9 +1,13 @@
 import { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import './Sidebar.css'
 
 const Sidebar = () => {
+  const navigate = useNavigate()
   const [sidebarWidth, setSidebarWidth] = useState(320)
   const [isResizing, setIsResizing] = useState(false)
+  const [showCreateMenu, setShowCreateMenu] = useState(false)
+  const [showAuthTooltip, setShowAuthTooltip] = useState(false)
   const sidebarRef = useRef(null)
 
   const MIN_WIDTH = 320
@@ -47,6 +51,16 @@ const Sidebar = () => {
     }
   }, [isResizing])
 
+  const handleCreateClick = () => {
+    setShowCreateMenu(prev => !prev)
+    setShowAuthTooltip(false)
+  }
+
+  const handleCreatePlaylistAction = () => {
+    setShowCreateMenu(false)
+    setShowAuthTooltip(true)
+  }
+
   return (
     <aside 
       className={`sidebar ${isResizing ? 'resizing' : ''}`} 
@@ -57,23 +71,91 @@ const Sidebar = () => {
 
       {/* Library Header */}
       <div className="library">
-        <div className="library-header">
+        <div className="library-header" style={{ position: 'relative' }}>
           <div className="library-title">
             <i className="fa-solid fa-book-open" aria-hidden="true" />
             <p>Your Library</p>
           </div>
-          <button className={`library-add-btn ${sidebarWidth >= 345 ? 'library-add-btn--expanded' : ''}`} id="btn-library-add" aria-label="Create playlist or podcast">
+          
+          <button
+            className={`library-add-btn ${showCreateMenu ? 'library-add-btn--active' : ''} ${sidebarWidth >= 345 ? 'library-add-btn--expanded' : ''}`}
+            id="btn-library-add"
+            aria-label="Create playlist or podcast"
+            onClick={handleCreateClick}
+          >
             <span className="library-add-btn__icon">
-              {sidebarWidth >= 345 ? (
+              {showCreateMenu ? (
                 <>
-                  <span className="library-add-btn__text">Create</span>
-                  <i className="fa-solid fa-plus" aria-hidden="true" />
+                  <i className="fa-solid fa-xmark" aria-hidden="true" />
+                  {sidebarWidth >= 345 && <span className="library-add-btn__text">Create</span>}
                 </>
               ) : (
-                <i className="fa-solid fa-plus" aria-hidden="true" />
+                <>
+                  <i className="fa-solid fa-plus" aria-hidden="true" />
+                  {sidebarWidth >= 345 && <span className="library-add-btn__text">Create</span>}
+                </>
               )}
             </span>
           </button>
+
+          {/* SPOTIFY-STYLE CREATE MENU DROPDOWN (Screenshot 2) */}
+          {showCreateMenu && (
+            <div className="create-menu-dropdown">
+              <div className="create-menu-item" onClick={handleCreatePlaylistAction}>
+                <div className="create-menu-icon-wrapper">
+                  <i className="fa-solid fa-music" />
+                </div>
+                <div className="create-menu-info">
+                  <span className="create-menu-title">Playlist</span>
+                  <span className="create-menu-desc">Create a playlist with songs or episodes</span>
+                </div>
+              </div>
+
+              <div className="create-menu-item" onClick={handleCreatePlaylistAction}>
+                <div className="create-menu-icon-wrapper">
+                  <i className="fa-solid fa-circle-half-stroke" />
+                </div>
+                <div className="create-menu-info">
+                  <span className="create-menu-title">Blend</span>
+                  <span className="create-menu-desc">Combine your friends&apos; tastes into a playlist</span>
+                </div>
+              </div>
+
+              <div className="create-menu-item" onClick={handleCreatePlaylistAction}>
+                <div className="create-menu-icon-wrapper">
+                  <i className="fa-solid fa-folder" />
+                </div>
+                <div className="create-menu-info">
+                  <span className="create-menu-title">Folder</span>
+                  <span className="create-menu-desc">Organize your playlists</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* BLUE CREATE PLAYLIST AUTH TOOLTIP (Screenshot 1) */}
+          {showAuthTooltip && (
+            <div className="create-auth-tooltip">
+              <div className="create-auth-tooltip__arrow" />
+              <h3 className="create-auth-tooltip__title">Create a playlist</h3>
+              <p className="create-auth-tooltip__desc">Log in to create and share playlists.</p>
+              <div className="create-auth-tooltip__actions">
+                <button
+                  className="create-auth-tooltip__btn-notnow"
+                  onClick={() => setShowAuthTooltip(false)}
+                >
+                  Not now
+                </button>
+                <button
+                  className="create-auth-tooltip__btn-login"
+                  onClick={() => navigate('/signup')}
+                >
+                  Log in
+                </button>
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
 
@@ -93,23 +175,7 @@ const Sidebar = () => {
                 <button
                   className="btn"
                   id="btn-create-playlist"
-                  onClick={async () => {
-                    const name = prompt('Enter new playlist name:')
-                    if (!name) return
-                    try {
-                      const res = await fetch('http://localhost:5000/api/v1/playlists', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name, description: 'My Aara Playlist' })
-                      })
-                      const data = await res.json()
-                      if (data.success) {
-                        alert(`Playlist "${data.data.name}" created successfully!`)
-                      }
-                    } catch (err) {
-                      alert('Failed to create playlist')
-                    }
-                  }}
+                  onClick={handleCreatePlaylistAction}
                 >
                   <span>Create playlist</span>
                 </button>
