@@ -3,7 +3,7 @@ import mongoose from 'mongoose'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import songRoutes from './routes/songRoutes.js'
-import musicRoutes from "./routes/music.routes.js";
+import musicRoutes from "./src/routes/music.routes.js";
 import favoriteRoutes from "./routes/favoriteRoutes.js";
 import playlistRoutes from "./routes/playlistRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
