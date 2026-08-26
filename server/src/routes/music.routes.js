@@ -1,11 +1,46 @@
 import express from 'express';
-import { searchJamendoTracks, getJamendoTrackById } from '../services/jamendo.service.js';
+import { searchJamendoTracks, getJamendoTrackById, getTrendingJamendoTracks } from '../services/jamendo.service.js';
 
 const router = express.Router();
 
 // Memory Cache object
 const searchCache = new Map();
 const CACHE_TTL = 300 * 1000; // 5 minutes
+
+// GET /api/v1/music/trending
+router.get('/trending', async (req, res) => {
+  try {
+    const limit = Math.min(Number(req.query.limit) || 20, 50);
+    const page = Number(req.query.page) || 1;
+    const offset = (page - 1) * limit;
+
+    const cacheKey = `trending:${limit}:${offset}`;
+    const cached = searchCache.get(cacheKey);
+
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return res.json({
+        success: true,
+        data: cached.data,
+        meta: { page, limit, cached: true },
+      });
+    }
+
+    const tracks = await getTrendingJamendoTracks(limit, offset);
+    searchCache.set(cacheKey, { timestamp: Date.now(), data: tracks });
+
+    res.json({
+      success: true,
+      data: tracks,
+      meta: { page, limit, count: tracks.length },
+    });
+  } catch (error) {
+    res.status(502).json({
+      success: false,
+      message: 'Unable to fetch trending music from Jamendo',
+      error: error.message,
+    });
+  }
+});
 
 // GET /api/v1/music/search?q=query&limit=20&page=1
 router.get('/search', async (req, res) => {
