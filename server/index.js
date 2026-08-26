@@ -3,6 +3,8 @@ import mongoose from 'mongoose'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import songRoutes from './routes/songRoutes.js'
+import musicRoutes from "./routes/music.routes.js";
+
 
 dotenv.config()
 
@@ -14,6 +16,7 @@ app.use(cors())
 app.use(express.json())
 
 // Routes
+app.use("/api/v1/music", musicRoutes);
 app.use('/api/songs', songRoutes)
 
 app.get('/', (req, res) => {

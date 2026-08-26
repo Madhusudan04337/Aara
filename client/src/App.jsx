@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Header from './components/Header/Header'
 import Sidebar from './components/Sidebar/Sidebar'
@@ -8,6 +9,8 @@ import PlayerBar from './components/PlayerBar/PlayerBar'
 import './App.css'
 
 function App() {
+  const [currentTrack, setCurrentTrack] = useState(null)
+
   return (
     <Routes>
       {/* Full-screen Signup Page */}
@@ -24,13 +27,13 @@ function App() {
               <main className="content" role="main" aria-label="Main content">
                 <div className="content-scroll">
                   <Routes>
-                    <Route path="/" element={<MainContent />} />
-                    <Route path="/session/:id" element={<CategorySessionView />} />
+                    <Route path="/" element={<MainContent onSelectTrack={setCurrentTrack} />} />
+                    <Route path="/session/:id" element={<CategorySessionView onSelectTrack={setCurrentTrack} />} />
                   </Routes>
                 </div>
               </main>
             </div>
-            <PlayerBar />
+            <PlayerBar currentTrack={currentTrack} />
           </div>
         }
       />
