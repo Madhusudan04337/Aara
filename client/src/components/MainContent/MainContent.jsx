@@ -23,17 +23,24 @@ const MainContent = ({ searchQuery = '', onSelectTrack }) => {
   const [isSearching, setIsSearching] = useState(false)
   const [searchError, setSearchError] = useState(null)
 
-  // Fetch default songs directly from backend MongoDB API
+  // Fetch default songs directly from backend MongoDB API with Jamendo fallback
   useEffect(() => {
     const fetchSongs = async () => {
       try {
         setLoading(true)
         const res = await fetch(API_URL)
         const data = await res.json()
-        if (data.success) {
+        if (data.success && data.data && data.data.length > 0) {
           setSongs(data.data)
         } else {
-          setError(data.error || 'Failed to fetch songs')
+          // Fallback to Jamendo trending tracks
+          const trendingRes = await fetch('http://localhost:5000/api/v1/music/trending')
+          const trendingData = await trendingRes.json()
+          if (trendingData.success) {
+            setSongs(trendingData.data || [])
+          } else {
+            setError(data.error || 'Failed to fetch songs')
+          }
         }
       } catch (err) {
         setError('Server connection failed. Make sure the backend server is running.')
