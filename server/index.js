@@ -4,7 +4,8 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import songRoutes from './routes/songRoutes.js'
 import musicRoutes from "./routes/music.routes.js";
-
+import favoriteRoutes from "./routes/favoriteRoutes.js";
+import playlistRoutes from "./routes/playlistRoutes.js";
 
 dotenv.config()
 
@@ -17,6 +18,8 @@ app.use(express.json())
 
 // Routes
 app.use("/api/v1/music", musicRoutes);
+app.use("/api/v1/favorites", favoriteRoutes);
+app.use("/api/v1/playlists", playlistRoutes);
 app.use('/api/songs', songRoutes)
 
 app.get('/', (req, res) => {

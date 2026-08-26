@@ -6,8 +6,9 @@ import AaraLogo from '../AaraLogo/AaraLogo'
 
 const SHOW_ALL_THRESHOLD = 5
 const API_URL = 'http://localhost:5000/api/songs'
+const SEARCH_API_URL = 'http://localhost:5000/api/v1/music/search'
 
-const MainContent = () => {
+const MainContent = ({ onSelectTrack }) => {
   const navigate = useNavigate()
   const [songs, setSongs] = useState([])
   const [loading, setLoading] = useState(true)
@@ -15,8 +16,15 @@ const MainContent = () => {
   const [hoveredCard, setHoveredCard] = useState(null)
   const [scrollPositions, setScrollPositions] = useState({})
   const scrollContainersRef = useRef({})
+  const [showPromoBanner, setShowPromoBanner] = useState(true)
 
-  // Fetch songs directly from backend MongoDB API
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [searchError, setSearchError] = useState(null)
+
+  // Fetch default songs directly from backend MongoDB API
   useEffect(() => {
     const fetchSongs = async () => {
       try {
@@ -37,6 +45,36 @@ const MainContent = () => {
 
     fetchSongs()
   }, [])
+
+  // Debounced search logic for Jamendo API
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([])
+      setIsSearching(false)
+      setSearchError(null)
+      return
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        setIsSearching(true)
+        setSearchError(null)
+        const res = await fetch(`${SEARCH_API_URL}?q=${encodeURIComponent(searchQuery.trim())}`)
+        const data = await res.json()
+        if (data.success) {
+          setSearchResults(data.data || [])
+        } else {
+          setSearchError(data.message || 'Search failed')
+        }
+      } catch (err) {
+        setSearchError('Failed to fetch search results from server')
+      } finally {
+        setIsSearching(false)
+      }
+    }, 400)
+
+    return () => clearTimeout(timer)
+  }, [searchQuery])
 
   const updateScrollState = (key) => {
     const el = scrollContainersRef.current[key]
@@ -77,8 +115,6 @@ const MainContent = () => {
   const trendingScrollState = scrollPositions['trending-songs'] || { canScrollLeft: false, canScrollRight: true }
   const artistsScrollState = scrollPositions['popular-artists'] || { canScrollLeft: false, canScrollRight: true }
 
-  const [showPromoBanner, setShowPromoBanner] = useState(true)
-
   if (error) {
     return (
       <div className="main-content">
@@ -91,6 +127,97 @@ const MainContent = () => {
 
   return (
     <div className="main-content">
+      {/* ── SEARCH INPUT BAR ── */}
+      <div style={{ marginBottom: '24px', display: 'flex', gap: '12px', alignItems: 'center' }}>
+        <div style={{ position: 'relative', width: '100%', maxWidth: '480px' }}>
+          <i
+            className="fa-solid fa-magnifying-glass"
+            style={{
+              position: 'absolute',
+              left: '14px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: '#b3b3b3'
+            }}
+          />
+          <input
+            type="text"
+            placeholder="Search Jamendo tracks, artists..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '12px 14px 12px 42px',
+              borderRadius: '50px',
+              border: 'none',
+              backgroundColor: '#242424',
+              color: '#ffffff',
+              fontSize: '14px',
+              outline: 'none'
+            }}
+          />
+        </div>
+      </div>
+
+      {/* ── SEARCH RESULTS SECTION ── */}
+      {searchQuery.trim() !== '' && (
+        <section className="content-section">
+          <div className="section-header">
+            <h2 className="section-title-static">Search Results for "{searchQuery}"</h2>
+          </div>
+
+          {isSearching && <p style={{ color: '#b3b3b3' }}>Searching tracks...</p>}
+
+          {searchError && <p style={{ color: '#e74c3c' }}>{searchError}</p>}
+
+          {!isSearching && !searchError && searchResults.length === 0 && (
+            <p style={{ color: '#b3b3b3' }}>No tracks found matching your query.</p>
+          )}
+
+          {!isSearching && searchResults.length > 0 && (
+            <div
+              className="cards-row"
+              style={{ overflowX: 'auto', display: 'flex', gap: '16px', paddingBottom: '12px' }}
+            >
+              {searchResults.map((track) => (
+                <div
+                  key={`search-${track.id}`}
+                  className="card"
+                  onClick={() => onSelectTrack && onSelectTrack(track)}
+                  onMouseEnter={() => setHoveredCard(`search-${track.id}`)}
+                  onMouseLeave={() => setHoveredCard(null)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div className="card-image-container">
+                    <img
+                      src={track.album_image || track.artworkUrl}
+                      alt={track.name || track.title}
+                      className="card-image"
+                    />
+                  </div>
+                  <button
+                    className={`play-btn ${
+                      hoveredCard === `search-${track.id}` ? 'play-btn--visible' : ''
+                    }`}
+                    aria-label={`Play ${track.name || track.title}`}
+                  >
+                    <i className="fa-solid fa-play" />
+                  </button>
+                  <div className="card-info">
+                    <h3 className="card-title" title={track.name || track.title}>
+                      {track.name || track.title}
+                    </h3>
+                    <p className="card-subtitle" title={track.artist_name || track.artistName}>
+                      {track.artist_name || track.artistName}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
       {/* ── MOBILE / TABLET PROMO CARD (AFTER HEADER) ── */}
       {showPromoBanner && (
         <div className="home-promo-card">
@@ -165,8 +292,18 @@ const MainContent = () => {
               <div
                 key={`trending-${song._id || song.id}`}
                 className="card"
+                onClick={() =>
+                  onSelectTrack &&
+                  onSelectTrack({
+                    name: song.title,
+                    artist_name: song.artist,
+                    album_image: song.imageUrl,
+                    audio: song.audioUrl,
+                  })
+                }
                 onMouseEnter={() => setHoveredCard(`trending-${song._id || song.id}`)}
                 onMouseLeave={() => setHoveredCard(null)}
+                style={{ cursor: 'pointer' }}
               >
                 <div className="card-image-container">
                   <img src={song.imageUrl || song.image} alt={song.title} className="card-image" />
