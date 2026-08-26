@@ -64,3 +64,13 @@
   font-size: 15px;
   white-space: nowrap;
 }
+
+/* ===================================================
+   RESPONSIVE — hide player bar on mobile/tablet
+   =================================================== */
+@media (max-width: 865px) {
+  .player-bar {
+    display: none !important;
+  }
+}
+

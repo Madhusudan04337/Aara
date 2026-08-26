@@ -1,0 +1,5 @@
+# Ignore temporary files and directories
+aara-music-ai-agent-build-specification-detail.md
+aara-music-ai-agent-build-specification.md
+screenshot/
+data/
