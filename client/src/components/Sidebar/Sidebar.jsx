@@ -90,7 +90,27 @@ const Sidebar = () => {
                 <span className="desc">It&apos;s easy, we&apos;ll help you</span>
               </div>
               <div>
-                <button className="btn" id="btn-create-playlist">
+                <button
+                  className="btn"
+                  id="btn-create-playlist"
+                  onClick={async () => {
+                    const name = prompt('Enter new playlist name:')
+                    if (!name) return
+                    try {
+                      const res = await fetch('http://localhost:5000/api/v1/playlists', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name, description: 'My Aara Playlist' })
+                      })
+                      const data = await res.json()
+                      if (data.success) {
+                        alert(`Playlist "${data.data.name}" created successfully!`)
+                      }
+                    } catch (err) {
+                      alert('Failed to create playlist')
+                    }
+                  }}
+                >
                   <span>Create playlist</span>
                 </button>
               </div>

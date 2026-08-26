@@ -6,6 +6,8 @@ import songRoutes from './routes/songRoutes.js'
 import musicRoutes from "./routes/music.routes.js";
 import favoriteRoutes from "./routes/favoriteRoutes.js";
 import playlistRoutes from "./routes/playlistRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
+import historyRoutes from "./routes/historyRoutes.js";
 
 dotenv.config()
 
@@ -17,9 +19,11 @@ app.use(cors())
 app.use(express.json())
 
 // Routes
+app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/music", musicRoutes);
 app.use("/api/v1/favorites", favoriteRoutes);
 app.use("/api/v1/playlists", playlistRoutes);
+app.use("/api/v1/history", historyRoutes);
 app.use('/api/songs', songRoutes)
 
 app.get('/', (req, res) => {

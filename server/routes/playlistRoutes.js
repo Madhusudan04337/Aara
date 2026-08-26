@@ -34,7 +34,38 @@ router.post('/', async (req, res) => {
   }
 });
 
-// POST /api/v1/playlists/:playlistId/tracks
+// PATCH /api/v1/playlists/:playlistId - Rename playlist
+router.patch('/:playlistId', async (req, res) => {
+  try {
+    const { name, description } = req.body;
+    const playlist = await Playlist.findOneAndUpdate(
+      { _id: req.params.playlistId, userId: MOCK_USER_ID },
+      { name, description },
+      { new: true }
+    );
+    if (!playlist) {
+      return res.status(404).json({ success: false, message: 'Playlist not found' });
+    }
+    res.json({ success: true, data: playlist });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// DELETE /api/v1/playlists/:playlistId - Delete playlist
+router.delete('/:playlistId', async (req, res) => {
+  try {
+    const result = await Playlist.deleteOne({ _id: req.params.playlistId, userId: MOCK_USER_ID });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ success: false, message: 'Playlist not found' });
+    }
+    res.json({ success: true, message: 'Playlist deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// POST /api/v1/playlists/:playlistId/tracks - Add track
 router.post('/:playlistId/tracks', async (req, res) => {
   try {
     const { track } = req.body;
@@ -55,6 +86,25 @@ router.post('/:playlistId/tracks', async (req, res) => {
     };
 
     playlist.tracks.push({ track: trackSnapshot });
+    await playlist.save();
+
+    res.json({ success: true, data: playlist });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// DELETE /api/v1/playlists/:playlistId/tracks/:trackId - Remove track from playlist
+router.delete('/:playlistId/tracks/:trackId', async (req, res) => {
+  try {
+    const playlist = await Playlist.findOne({ _id: req.params.playlistId, userId: MOCK_USER_ID });
+    if (!playlist) {
+      return res.status(404).json({ success: false, message: 'Playlist not found' });
+    }
+
+    playlist.tracks = playlist.tracks.filter(
+      (item) => item.track.jamendoTrackId !== req.params.trackId
+    );
     await playlist.save();
 
     res.json({ success: true, data: playlist });
