@@ -160,7 +160,7 @@ const MainContent = ({ searchQuery = '', onSelectTrack }) => {
                   onClick={() => onSelectTrack && onSelectTrack(track)}
                   onMouseEnter={() => setHoveredCard(`search-${track.id}`)}
                   onMouseLeave={() => setHoveredCard(null)}
-                  style={{ cursor: 'pointer' }}
+                  style={{ cursor: 'pointer', position: 'relative' }}
                 >
                   <div className="card-image-container">
                     <img
@@ -184,6 +184,46 @@ const MainContent = ({ searchQuery = '', onSelectTrack }) => {
                     <p className="card-subtitle" title={track.artist_name || track.artistName}>
                       {track.artist_name || track.artistName}
                     </p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
+                      {(track.license_ccurl || track.licenseUrl) && (
+                        <a
+                          href={track.license_ccurl || track.licenseUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          style={{ fontSize: '11px', color: '#1db954', textDecoration: 'underline' }}
+                        >
+                          CC License
+                        </a>
+                      )}
+                      <button
+                        aria-label="Add to favorites"
+                        onClick={async (e) => {
+                          e.stopPropagation()
+                          try {
+                            await fetch('http://localhost:5000/api/v1/favorites', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ track })
+                            })
+                            alert('Saved to favorites!')
+                          } catch (err) {
+                            console.error('Failed to save favorite:', err)
+                          }
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#b3b3b3',
+                          cursor: 'pointer',
+                          fontSize: '14px',
+                          padding: '2px 4px'
+                        }}
+                        title="Save to favorites"
+                      >
+                        <i className="fa-regular fa-heart" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
