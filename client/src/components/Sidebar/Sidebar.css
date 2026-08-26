@@ -294,3 +294,131 @@
     display: none;
   }
 }
+
+/* ---- SPOTIFY-STYLE CREATE MENU DROPDOWN (Screenshot 2) ---- */
+.create-menu-dropdown {
+  position: absolute;
+  top: 48px;
+  right: 0;
+  width: 290px;
+  background-color: #282828;
+  border-radius: 8px;
+  padding: 8px;
+  box-shadow: 0 16px 24px rgba(0, 0, 0, 0.7);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.create-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.create-menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.create-menu-icon-wrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #3e3e3e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #b3b3b3;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.create-menu-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.create-menu-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.create-menu-desc {
+  font-size: 12px;
+  color: #a7a7a7;
+}
+
+/* ---- BLUE CREATE PLAYLIST AUTH TOOLTIP (Screenshot 1) ---- */
+.create-auth-tooltip {
+  position: absolute;
+  top: 100px;
+  left: calc(100% + 12px);
+  width: 320px;
+  background-color: #0d72ea;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  z-index: 200;
+  color: #ffffff;
+}
+
+.create-auth-tooltip__arrow {
+  position: absolute;
+  top: 36px;
+  left: -8px;
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 8px solid #0d72ea;
+}
+
+.create-auth-tooltip__title {
+  font-size: 18px;
+  font-weight: 800;
+  margin: 0 0 8px 0;
+}
+
+.create-auth-tooltip__desc {
+  font-size: 14px;
+  margin: 0 0 16px 0;
+  opacity: 0.9;
+}
+
+.create-auth-tooltip__actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
+}
+
+.create-auth-tooltip__btn-notnow {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.create-auth-tooltip__btn-login {
+  background-color: #ffffff;
+  color: #000000;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 20px;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.create-auth-tooltip__btn-login:hover {
+  transform: scale(1.05);
+}
