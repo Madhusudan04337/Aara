@@ -10,6 +10,7 @@ import './App.css'
 
 function App() {
   const [currentTrack, setCurrentTrack] = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   return (
     <Routes>
@@ -21,13 +22,21 @@ function App() {
         path="*"
         element={
           <div className="app-layout">
-            <Header />
+            <Header searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
             <div className="middle-bar">
               <Sidebar />
               <main className="content" role="main" aria-label="Main content">
                 <div className="content-scroll">
                   <Routes>
-                    <Route path="/" element={<MainContent onSelectTrack={setCurrentTrack} />} />
+                    <Route
+                      path="/"
+                      element={
+                        <MainContent
+                          searchQuery={searchQuery}
+                          onSelectTrack={setCurrentTrack}
+                        />
+                      }
+                    />
                     <Route path="/session/:id" element={<CategorySessionView onSelectTrack={setCurrentTrack} />} />
                   </Routes>
                 </div>

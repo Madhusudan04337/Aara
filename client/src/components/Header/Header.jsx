@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import AaraLogo from '../AaraLogo/AaraLogo'
 import './Header.css'
 
-const Header = () => {
+const Header = ({ searchQuery, setSearchQuery }) => {
   const navigate = useNavigate()
 
   return (
@@ -31,6 +31,8 @@ const Header = () => {
           type="text"
           placeholder="What do you want to play?"
           aria-label="Search for songs, artists, or podcasts"
+          value={searchQuery || ''}
+          onChange={(e) => setSearchQuery && setSearchQuery(e.target.value)}
         />
         <div className="search-bar__divider" aria-hidden="true" />
         <button className="search-bar__browse-btn" aria-label="Browse categories" title="Browse">

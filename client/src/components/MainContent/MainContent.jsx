@@ -8,7 +8,7 @@ const SHOW_ALL_THRESHOLD = 5
 const API_URL = 'http://localhost:5000/api/songs'
 const SEARCH_API_URL = 'http://localhost:5000/api/v1/music/search'
 
-const MainContent = ({ onSelectTrack }) => {
+const MainContent = ({ searchQuery = '', onSelectTrack }) => {
   const navigate = useNavigate()
   const [songs, setSongs] = useState([])
   const [loading, setLoading] = useState(true)
@@ -19,7 +19,6 @@ const MainContent = ({ onSelectTrack }) => {
   const [showPromoBanner, setShowPromoBanner] = useState(true)
 
   // Search state
-  const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
   const [isSearching, setIsSearching] = useState(false)
   const [searchError, setSearchError] = useState(null)
@@ -127,39 +126,7 @@ const MainContent = ({ onSelectTrack }) => {
 
   return (
     <div className="main-content">
-      {/* ── SEARCH INPUT BAR ── */}
-      <div style={{ marginBottom: '24px', display: 'flex', gap: '12px', alignItems: 'center' }}>
-        <div style={{ position: 'relative', width: '100%', maxWidth: '480px' }}>
-          <i
-            className="fa-solid fa-magnifying-glass"
-            style={{
-              position: 'absolute',
-              left: '14px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: '#b3b3b3'
-            }}
-          />
-          <input
-            type="text"
-            placeholder="Search Jamendo tracks, artists..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '12px 14px 12px 42px',
-              borderRadius: '50px',
-              border: 'none',
-              backgroundColor: '#242424',
-              color: '#ffffff',
-              fontSize: '14px',
-              outline: 'none'
-            }}
-          />
-        </div>
-      </div>
-
-      {/* ── SEARCH RESULTS SECTION ── */}
+      {/* ── SEARCH RESULTS SECTION (using Header Search input) ── */}
       {searchQuery.trim() !== '' && (
         <section className="content-section">
           <div className="section-header">
