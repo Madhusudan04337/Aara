@@ -35,6 +35,13 @@
 .track-player-artist {
   font-size: 12px;
   color: #b3b3b3;
+  margin: 0 0 2px 0;
+}
+
+.track-player-attribution {
+  font-size: 11px;
+  color: #a7a7a7;
+  font-style: italic;
   margin: 0 0 6px 0;
 }
 
