@@ -53,8 +53,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #450af5 0%, #8e8ee6 50%, #c4efd9 100%);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(135deg, #ff3366 0%, #e91429 50%, #B91FE1 100%);
+  box-shadow: 0 8px 24px rgba(233, 20, 41, 0.35);
   color: #ffffff;
   font-size: 4.5rem;
 }
@@ -122,21 +122,21 @@
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background-color: #1ed760;
+  background: linear-gradient(135deg, #F10EB1 0%, #B91FE1 60%, #6324F5 100%);
   border: none;
-  color: #000000;
+  color: #ffffff;
   font-size: 1.35rem;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
-  transition: transform 0.2s ease, background-color 0.2s ease;
+  box-shadow: 0 4px 16px rgba(185, 31, 225, 0.45);
+  transition: transform 0.2s ease, filter 0.2s ease;
 }
 
 .liked-songs-play-all-btn:hover:not(:disabled) {
   transform: scale(1.06);
-  background-color: #1fdf64;
+  filter: brightness(1.15);
 }
 
 .liked-songs-play-all-btn:disabled {
@@ -263,7 +263,7 @@
 }
 
 .liked-playing-indicator {
-  color: #1ed760;
+  color: #d946ef;
   font-size: 0.85rem;
 }
 
@@ -298,7 +298,7 @@
 }
 
 .row-track-title.text--active {
-  color: #1ed760;
+  color: #d946ef;
 }
 
 .row-track-artist {
@@ -339,7 +339,7 @@
 .row-heart-btn {
   background: none;
   border: none;
-  color: #1ed760;
+  color: #ff3b5c;
   font-size: 1rem;
   cursor: pointer;
   padding: 0.25rem;
@@ -351,7 +351,7 @@
 }
 
 .row-heart-btn.btn--unlike {
-  color: #1ed760;
+  color: #ff3b5c;
 }
 
 /* Empty State */
@@ -414,7 +414,11 @@
 }
 
 /* Responsive adjustments */
-@media (max-width: 768px) {
+@media (max-width: 865px) {
+  .liked-songs-container {
+    padding: 1rem 1rem 125px;
+  }
+
   .liked-songs-hero {
     flex-direction: column;
     align-items: center;

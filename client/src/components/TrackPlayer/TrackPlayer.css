@@ -101,7 +101,7 @@
 }
 
 .track-player-bar__fav-btn--active {
-  color: #1ed760 !important;
+  color: #ff3b5c !important;
 }
 
 /* ── CENTER SECTION (Controls & Timeline) ── */
@@ -144,7 +144,7 @@
 }
 
 .track-player-bar__control-btn--active {
-  color: #1ed760 !important;
+  color: #d946ef !important;
 }
 
 .track-player-bar__control-btn--active::after {
@@ -153,7 +153,7 @@
   bottom: 0px;
   width: 4px;
   height: 4px;
-  background-color: #1ed760;
+  background-color: #B91FE1;
   border-radius: 50%;
 }
 
@@ -241,7 +241,7 @@
 }
 
 .track-player-bar__slider-wrapper:hover .track-player-bar__slider-progress {
-  background-color: #1ed760;
+  background: linear-gradient(90deg, #F10EB1, #B91FE1, #6324F5);
 }
 
 .track-player-bar__slider::-webkit-slider-thumb {
@@ -301,8 +301,8 @@
 }
 
 .track-player-bar__license-tag:hover {
-  color: #1ed760;
-  border-color: #1ed760;
+  color: #d946ef;
+  border-color: #B91FE1;
 }
 
 .track-player-bar__volume-container {
@@ -347,7 +347,7 @@
 }
 
 .track-player-bar__volume-slider-wrapper:hover .track-player-bar__volume-progress {
-  background-color: #1ed760;
+  background: linear-gradient(90deg, #F10EB1, #B91FE1);
 }
 
 .track-player-bar__volume-slider::-webkit-slider-thumb {
@@ -383,15 +383,153 @@
   opacity: 1;
 }
 
-/* ── RESPONSIVE ── */
-@media (max-width: 768px) {
-  .track-player-bar__right {
-    display: none;
+/* ── RESPONSIVE DISPLAY TOGGLES ── */
+.desktop-only-player {
+  display: flex;
+}
+
+.mobile-mini-player {
+  display: none;
+}
+
+@media (max-width: 865px) {
+  .desktop-only-player {
+    display: none !important;
   }
-  .track-player-bar__center {
-    width: 60%;
+
+  .mobile-mini-player {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    bottom: 66px; /* Sits right above 62px mobile bottom nav */
+    left: 8px;
+    right: 8px;
+    background: linear-gradient(135deg, #282828 0%, #1a1a1a 100%);
+    background-color: #242424;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08);
+    z-index: 999;
+    cursor: pointer;
+    overflow: hidden;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.15s ease, background-color 0.15s ease;
   }
-  .track-player-bar__left {
-    width: 40%;
+
+  .mobile-mini-player:active {
+    transform: scale(0.985);
+  }
+
+  .mobile-mini-player__content {
+    display: flex;
+    align-items: center;
+    padding: 7px 10px;
+    gap: 10px;
+    height: 48px;
+  }
+
+  .mobile-mini-player__art-box {
+    width: 38px;
+    height: 38px;
+    border-radius: 4px;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  }
+
+  .mobile-mini-player__art {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .mobile-mini-player__info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .mobile-mini-player__title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+  }
+
+  .mobile-mini-player__artist {
+    font-size: 11px;
+    color: #a7a7a7;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+    margin-top: 2px;
+  }
+
+  .mobile-mini-player__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .mobile-mini-player__btn {
+    background: transparent;
+    border: none;
+    color: #b3b3b3;
+    font-size: 18px;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.12s ease, color 0.12s ease;
+  }
+
+  .mobile-mini-player__btn:active {
+    transform: scale(1.2);
+  }
+
+  .mobile-mini-player__btn--liked {
+    color: #ff3b5c !important;
+  }
+
+  .mobile-mini-player__play-btn {
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    font-size: 20px;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.12s ease;
+  }
+
+  .mobile-mini-player__play-btn:active {
+    transform: scale(0.88);
+  }
+
+  .mobile-mini-player__progress-track {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: rgba(255, 255, 255, 0.15);
+  }
+
+  .mobile-mini-player__progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #F10EB1, #B91FE1, #6324F5);
+    transition: width 0.1s linear;
   }
 }

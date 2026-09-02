@@ -6,7 +6,7 @@
 
 .player-bar aside {
   margin: 0;
-  background-image: linear-gradient(90deg, #af2896, #509bf5);
+  background-image: linear-gradient(90deg, #F10EB1, #B91FE1, #6324F5);
   border-radius: 0.5rem;
   height: 100%;
 }
@@ -66,10 +66,15 @@
 }
 
 /* ===================================================
-   RESPONSIVE — hide player bar on mobile/tablet
+   RESPONSIVE — on mobile, let the floating TrackPlayer render
    =================================================== */
 @media (max-width: 865px) {
   .player-bar {
+    height: 0;
+    overflow: visible;
+  }
+
+  .player-bar aside {
     display: none !important;
   }
 }

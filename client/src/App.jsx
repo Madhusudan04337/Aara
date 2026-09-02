@@ -8,9 +8,16 @@ import MainContent from './components/MainContent/MainContent'
 import CategorySessionView from './components/CategorySessionView/CategorySessionView'
 import LikedSongsView from './components/LikedSongsView/LikedSongsView'
 import PlaylistView from './components/PlaylistView/PlaylistView'
+import SearchView from './components/SearchView/SearchView'
+import BrowseView from './components/BrowseView/BrowseView'
+import LiveView from './components/LiveView/LiveView'
+import LibraryView from './components/LibraryView/LibraryView'
+import PremiumView from './components/PremiumView/PremiumView'
+import BottomNavBar from './components/BottomNavBar/BottomNavBar'
 import SignupPage from './components/Auth/SignupPage'
 import LoginPage from './components/Auth/LoginPage'
 import PlayerBar from './components/PlayerBar/PlayerBar'
+import SongAuthPosterModal from './components/SongAuthPosterModal/SongAuthPosterModal'
 import './App.css'
 
 function App() {
@@ -19,6 +26,7 @@ function App() {
   return (
     <AuthProvider>
       <PlayerProvider>
+        <SongAuthPosterModal />
         <Routes>
           {/* Full-screen Auth Pages */}
           <Route path="/signup" element={<SignupPage />} />
@@ -39,6 +47,11 @@ function App() {
                           path="/"
                           element={<MainContent searchQuery={searchQuery} />}
                         />
+                        <Route path="/search" element={<SearchView />} />
+                        <Route path="/browse" element={<BrowseView />} />
+                        <Route path="/live" element={<LiveView />} />
+                        <Route path="/library" element={<LibraryView />} />
+                        <Route path="/premium" element={<PremiumView />} />
                         <Route path="/session/:id" element={<CategorySessionView />} />
                         <Route path="/liked-songs" element={<LikedSongsView />} />
                         <Route path="/collection/tracks" element={<LikedSongsView />} />
@@ -48,6 +61,7 @@ function App() {
                   </main>
                 </div>
                 <PlayerBar />
+                <BottomNavBar />
               </div>
             }
           />

@@ -1,0 +1,316 @@
+/* ── Song Auth Poster Modal Overlay ── */
+.song-auth-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background-color: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  overflow-y: auto;
+  animation: songAuthFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes songAuthFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.song-auth-modal__wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 860px;
+  animation: songAuthScaleUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes songAuthScaleUp {
+  from {
+    transform: scale(0.94) translateY(12px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ── Main Modal Card ── */
+.song-auth-modal__card {
+  display: flex;
+  flex-direction: row;
+  background: linear-gradient(145deg, #2b1215 0%, #170d10 60%, #121212 100%);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  width: 100%;
+  padding: 2.75rem 3rem;
+  gap: 3rem;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+/* ── Left Column: Artwork ── */
+.song-auth-modal__art-column {
+  flex: 0 0 320px;
+  max-width: 320px;
+  display: flex;
+  justify-content: center;
+}
+
+.song-auth-modal__art-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  background: #242424;
+}
+
+.song-auth-modal__artwork {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.song-auth-modal__art-overlay {
+  position: absolute;
+  inset: auto 0 0 0;
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.85) 100%);
+  padding: 1.25rem 1rem 0.85rem;
+  pointer-events: none;
+}
+
+.song-auth-modal__track-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.song-auth-modal__track-title {
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.song-auth-modal__track-artist {
+  color: #a7a7a7;
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Right Column: Content ── */
+.song-auth-modal__content-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  min-width: 0;
+}
+
+.song-auth-modal__headline {
+  font-size: 2.35rem;
+  line-height: 1.18;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 2rem 0;
+  letter-spacing: -0.025em;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.song-auth-modal__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  width: 100%;
+  max-width: 320px;
+  margin-bottom: 2rem;
+}
+
+.song-auth-modal__btn-primary {
+  background-color: #1ed760;
+  color: #000000;
+  border: none;
+  border-radius: 9999px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  padding: 0.95rem 2rem;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  text-align: center;
+  transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 6px 20px rgba(30, 215, 96, 0.3);
+}
+
+.song-auth-modal__btn-primary:hover {
+  background-color: #1fdf64;
+  transform: scale(1.04);
+  box-shadow: 0 8px 24px rgba(30, 215, 96, 0.45);
+}
+
+.song-auth-modal__btn-primary:active {
+  transform: scale(0.98);
+}
+
+.song-auth-modal__btn-secondary {
+  background-color: transparent;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 9999px;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 0.85rem 2rem;
+  cursor: pointer;
+  text-align: center;
+  transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.song-auth-modal__btn-secondary:hover {
+  border-color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.08);
+  transform: scale(1.03);
+}
+
+.song-auth-modal__btn-secondary:active {
+  transform: scale(0.98);
+}
+
+/* ── Footer ── */
+.song-auth-modal__footer {
+  margin-top: 0.25rem;
+}
+
+.song-auth-modal__footer-text {
+  font-size: 0.95rem;
+  color: #a7a7a7;
+  font-weight: 500;
+}
+
+.song-auth-modal__link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-left: 0.25rem;
+  transition: color 0.15s ease;
+}
+
+.song-auth-modal__link-btn:hover {
+  color: #1ed760;
+}
+
+/* ── Bottom Close Button Bar ── */
+.song-auth-modal__bottom-bar {
+  margin-top: 1.75rem;
+  display: flex;
+  justify-content: center;
+}
+
+.song-auth-modal__close-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0.5rem 1.5rem;
+  border-radius: 9999px;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.song-auth-modal__close-btn:hover {
+  color: #ffffff;
+  transform: scale(1.08);
+}
+
+/* ── Toast notification ── */
+.song-auth-modal__toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #181818;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.8);
+  padding: 0.85rem 1.5rem;
+  border-radius: 9999px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  z-index: 10000;
+  animation: toastFade 0.3s ease;
+}
+
+.song-auth-modal__toast i {
+  color: #1ed760;
+  font-size: 1.1rem;
+}
+
+@keyframes toastFade {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 15px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* ── Responsive styling ── */
+@media (max-width: 768px) {
+  .song-auth-modal {
+    padding: 1rem;
+  }
+
+  .song-auth-modal__card {
+    flex-direction: column;
+    padding: 2rem 1.5rem;
+    gap: 1.75rem;
+    align-items: center;
+    text-align: center;
+  }
+
+  .song-auth-modal__art-column {
+    flex: 0 0 auto;
+    max-width: 220px;
+    width: 100%;
+  }
+
+  .song-auth-modal__content-column {
+    align-items: center;
+  }
+
+  .song-auth-modal__headline {
+    font-size: 1.65rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .song-auth-modal__actions {
+    max-width: 100%;
+  }
+}

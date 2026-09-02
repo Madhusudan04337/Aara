@@ -452,7 +452,7 @@
 }
 
 .sidebar-playlist-item--active .sidebar-playlist-name {
-  color: #1ed760;
+  color: #d946ef;
 }
 
 .sidebar-playlist-art {
@@ -469,7 +469,7 @@
 }
 
 .sidebar-playlist-art--liked {
-  background: linear-gradient(135deg, #450af5, #8e8ee5);
+  background: linear-gradient(135deg, #ff3366, #e91429);
   color: #ffffff;
 }
 
@@ -502,7 +502,7 @@
 }
 
 .sidebar-pinned-icon {
-  color: #1db954;
+  color: #B91FE1;
   font-size: 10px;
 }
 
@@ -674,8 +674,8 @@
 }
 
 .sidebar-modal-submit {
-  background-color: #1db954;
-  color: #000000;
+  background: linear-gradient(135deg, #F10EB1 0%, #B91FE1 100%);
+  color: #ffffff;
   border: none;
   font-weight: 700;
   font-size: 14px;
@@ -683,11 +683,11 @@
   padding: 10px 24px;
   border-radius: 20px;
   font-family: inherit;
-  transition: background-color 0.2s ease, transform 0.15s ease;
+  transition: filter 0.2s ease, transform 0.15s ease;
 }
 
 .sidebar-modal-submit:hover:not(:disabled) {
-  background-color: #1ed760;
+  filter: brightness(1.12);
   transform: scale(1.04);
 }
 

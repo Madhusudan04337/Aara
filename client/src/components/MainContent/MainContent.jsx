@@ -11,10 +11,18 @@ const SHOW_ALL_THRESHOLD = 5
 const API_URL = '/api/songs'
 const SEARCH_API_URL = '/api/v1/music/search'
 
+const getGreeting = () => {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Good morning'
+  if (hour < 18) return 'Good afternoon'
+  return 'Good evening'
+}
+
 const MainContent = ({ searchQuery = '' }) => {
   const navigate = useNavigate()
   const { playTrack, togglePlay, isTrackActive, isTrackPlaying, toggleFavorite, isFavorite } = usePlayer()
 
+  const [activeTabFilter, setActiveTabFilter] = useState('all')
   const [songs, setSongs] = useState([])
   const [artists, setArtists] = useState([])
   const [loading, setLoading] = useState(true)
@@ -220,6 +228,33 @@ const MainContent = ({ searchQuery = '' }) => {
 
   return (
     <div className="main-content">
+      {/* ── MOBILE APP-LIKE HOME GREETING & PILL FILTERS ── */}
+      {!hasSearchQuery && (
+        <div className="mobile-home-header">
+          <h1 className="mobile-home-greeting">{getGreeting()}</h1>
+          <div className="mobile-home-pills">
+            <button
+              className={`mobile-home-pill ${activeTabFilter === 'all' ? 'mobile-home-pill--active' : ''}`}
+              onClick={() => setActiveTabFilter('all')}
+            >
+              All
+            </button>
+            <button
+              className={`mobile-home-pill ${activeTabFilter === 'music' ? 'mobile-home-pill--active' : ''}`}
+              onClick={() => setActiveTabFilter('music')}
+            >
+              Music
+            </button>
+            <button
+              className={`mobile-home-pill ${activeTabFilter === 'podcasts' ? 'mobile-home-pill--active' : ''}`}
+              onClick={() => setActiveTabFilter('podcasts')}
+            >
+              Podcasts
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── SEARCH RESULTS SECTION (using Header Search input) ── */}
       {hasSearchQuery && (
         <section className="content-section">
@@ -285,7 +320,7 @@ const MainContent = ({ searchQuery = '' }) => {
                       <div className="card-info">
                         <h3
                           className="card-title"
-                          style={{ color: active ? '#1ed760' : '#ffffff' }}
+                          style={{ color: active ? '#d946ef' : '#ffffff' }}
                           title={track.name || track.title}
                         >
                           {track.name || track.title}
@@ -322,7 +357,7 @@ const MainContent = ({ searchQuery = '' }) => {
                               target="_blank"
                               rel="noreferrer"
                               onClick={(e) => e.stopPropagation()}
-                              style={{ fontSize: '11px', color: '#1db954', textDecoration: 'underline' }}
+                              style={{ fontSize: '11px', color: '#B91FE1', textDecoration: 'underline' }}
                             >
                               CC License
                             </a>
@@ -336,10 +371,11 @@ const MainContent = ({ searchQuery = '' }) => {
                             style={{
                               background: 'none',
                               border: 'none',
-                              color: favorited ? '#1ed760' : '#b3b3b3',
+                              color: favorited ? '#ff3b5c' : '#b3b3b3',
                               cursor: 'pointer',
                               fontSize: '14px',
                               padding: '2px 4px',
+                              transition: 'color 0.2s ease, transform 0.15s ease',
                             }}
                             title={favorited ? 'Remove from favorites' : 'Save to favorites'}
                           >
@@ -485,7 +521,7 @@ const MainContent = ({ searchQuery = '' }) => {
                   <div className="card-info">
                     <h3
                       className="card-title"
-                      style={{ color: active ? '#1ed760' : '#ffffff' }}
+                      style={{ color: active ? '#d946ef' : '#ffffff' }}
                       title={song.title}
                     >
                       {song.title}

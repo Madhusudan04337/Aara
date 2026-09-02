@@ -36,6 +36,8 @@ export const PlayerProvider = ({ children }) => {
   const [repeatMode, setRepeatMode] = useState('off') // 'off' | 'all' | 'one'
   const [queue, setQueue] = useState([])
   const [queueIndex, setQueueIndex] = useState(-1)
+  const [authPosterTrack, setAuthPosterTrack] = useState(null)
+  const [isAuthPosterOpen, setIsAuthPosterOpen] = useState(false)
   const [favorites, setFavorites] = useState(() => {
     try {
       const storageKey = user?.id ? `aara_favorites_${user.id}` : 'aara_favorites_guest'
@@ -90,11 +92,29 @@ export const PlayerProvider = ({ children }) => {
     }
   }, [token])
 
+  const openAuthPoster = useCallback((track) => {
+    if (!track) return
+    const norm = normalizeTrack(track)
+    setAuthPosterTrack(norm)
+    setIsAuthPosterOpen(true)
+  }, [])
+
+  const closeAuthPoster = useCallback(() => {
+    setIsAuthPosterOpen(false)
+  }, [])
+
   // Play a specific track
   const playTrack = useCallback((track, newQueue = null) => {
     if (!track) return
     const normalized = normalizeTrack(track)
     if (!normalized || !normalized.audioUrl) return
+
+    // Require authentication before playing
+    if (!token || !user) {
+      setAuthPosterTrack(normalized)
+      setIsAuthPosterOpen(true)
+      return
+    }
 
     if (newQueue && Array.isArray(newQueue) && newQueue.length > 0) {
       const normalizedQueue = newQueue.map(normalizeTrack).filter(Boolean)
@@ -118,7 +138,25 @@ export const PlayerProvider = ({ children }) => {
         setIsPlaying(false)
       })
     }
-  }, [recordPlayHistory])
+  }, [token, user, recordPlayHistory])
+
+  // Resume pending track if user logged in via auth poster modal
+  useEffect(() => {
+    if (token && user) {
+      try {
+        const pendingStr = sessionStorage.getItem('aara_pending_track')
+        if (pendingStr) {
+          const pending = JSON.parse(pendingStr)
+          sessionStorage.removeItem('aara_pending_track')
+          if (pending && pending.audioUrl) {
+            playTrack(pending)
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }, [token, user, playTrack])
 
   const seekTo = useCallback((seconds) => {
     if (audioRef.current) {
@@ -217,7 +255,7 @@ export const PlayerProvider = ({ children }) => {
       setIsPlaying(false)
       const { queue: q, queueIndex: qIdx } = stateRef.current
       if (q.length > 1 && qIdx < q.length - 1) {
-        setTimeout(() => nextTrack(), 300)
+        setTimeout(() => nextTrack(), 400)
       }
     }
 
@@ -238,6 +276,80 @@ export const PlayerProvider = ({ children }) => {
       audio.removeEventListener('error', onError)
     }
   }, [nextTrack, volume])
+
+  // Sync document title and MediaSession API
+  useEffect(() => {
+    if (!currentTrack) {
+      document.title = 'Aara - Web Player: Music for everyone'
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'none'
+      }
+      return
+    }
+
+    // Dynamic browser tab title
+    if (isPlaying) {
+      document.title = `▶ ${currentTrack.title} • ${currentTrack.artist} | Aara`
+    } else {
+      document.title = `⏸ ${currentTrack.title} • ${currentTrack.artist} | Aara`
+    }
+
+    // Native MediaSession API for lockscreen, smartwatch, taskbar & bluetooth controls
+    if ('mediaSession' in navigator) {
+      try {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: currentTrack.title || 'Unknown Title',
+          artist: currentTrack.artist || 'Unknown Artist',
+          album: 'Aara Web Player',
+          artwork: [
+            { src: currentTrack.artworkUrl || DEFAULT_TRACK_ARTWORK, sizes: '96x96', type: 'image/png' },
+            { src: currentTrack.artworkUrl || DEFAULT_TRACK_ARTWORK, sizes: '128x128', type: 'image/png' },
+            { src: currentTrack.artworkUrl || DEFAULT_TRACK_ARTWORK, sizes: '256x256', type: 'image/png' },
+            { src: currentTrack.artworkUrl || DEFAULT_TRACK_ARTWORK, sizes: '512x512', type: 'image/png' },
+          ]
+        })
+
+        navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused'
+
+        // Action handlers
+        navigator.mediaSession.setActionHandler('play', () => {
+          if (audioRef.current && !isPlaying) {
+            audioRef.current.play().catch(console.warn)
+          }
+        })
+        navigator.mediaSession.setActionHandler('pause', () => {
+          if (audioRef.current && isPlaying) {
+            audioRef.current.pause()
+          }
+        })
+        navigator.mediaSession.setActionHandler('previoustrack', () => {
+          prevTrack()
+        })
+        navigator.mediaSession.setActionHandler('nexttrack', () => {
+          nextTrack()
+        })
+        navigator.mediaSession.setActionHandler('seekto', (details) => {
+          if (details.seekTime !== undefined && details.seekTime !== null) {
+            seekTo(details.seekTime)
+          }
+        })
+        navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+          const skip = details.seekOffset || 10
+          if (audioRef.current) {
+            seekTo(Math.max(0, audioRef.current.currentTime - skip))
+          }
+        })
+        navigator.mediaSession.setActionHandler('seekforward', (details) => {
+          const skip = details.seekOffset || 10
+          if (audioRef.current) {
+            seekTo(Math.min(duration || 9999, audioRef.current.currentTime + skip))
+          }
+        })
+      } catch (err) {
+        console.warn('MediaSession configuration warning:', err)
+      }
+    }
+  }, [currentTrack, isPlaying, duration, nextTrack, prevTrack, seekTo])
 
   // Sync volume with audio element
   useEffect(() => {
@@ -310,6 +422,17 @@ export const PlayerProvider = ({ children }) => {
   }, [fetchFavorites])
 
   const togglePlay = useCallback(() => {
+    if (!token || !user) {
+      if (currentTrack) {
+        setAuthPosterTrack(currentTrack)
+        setIsAuthPosterOpen(true)
+      } else if (queue.length > 0) {
+        setAuthPosterTrack(queue[0])
+        setIsAuthPosterOpen(true)
+      }
+      return
+    }
+
     if (!audioRef.current || !currentTrack) return
 
     if (isPlaying) {
@@ -321,7 +444,7 @@ export const PlayerProvider = ({ children }) => {
         console.warn('Audio play request error:', err)
       })
     }
-  }, [isPlaying, currentTrack])
+  }, [token, user, isPlaying, currentTrack, queue])
 
   const setPlayerVolume = useCallback((val) => {
     const clamped = Math.max(0, Math.min(1, val))
@@ -397,6 +520,52 @@ export const PlayerProvider = ({ children }) => {
     return isTrackActive(track) && isPlaying
   }, [isTrackActive, isPlaying])
 
+  // Global Keyboard Shortcuts (Space, Arrow keys, M, N, P, L)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ignore keystrokes when typing inside inputs, textareas, contenteditable or modal dialogs
+      const tag = document.activeElement?.tagName?.toLowerCase()
+      const isEditable = document.activeElement?.isContentEditable
+      if (tag === 'input' || tag === 'textarea' || tag === 'select' || isEditable) {
+        return
+      }
+
+      if (e.code === 'Space') {
+        e.preventDefault()
+        togglePlay()
+      } else if (e.code === 'ArrowRight' && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault()
+        if (audioRef.current) {
+          seekTo(Math.min(duration || 9999, (audioRef.current.currentTime || 0) + 5))
+        }
+      } else if (e.code === 'ArrowLeft' && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault()
+        if (audioRef.current) {
+          seekTo(Math.max(0, (audioRef.current.currentTime || 0) - 5))
+        }
+      } else if (e.code === 'ArrowUp' && (e.ctrlKey || e.altKey || !e.shiftKey)) {
+        e.preventDefault()
+        setVolume(v => Math.min(1, parseFloat((v + 0.05).toFixed(2))))
+      } else if (e.code === 'ArrowDown' && (e.ctrlKey || e.altKey || !e.shiftKey)) {
+        e.preventDefault()
+        setVolume(v => Math.max(0, parseFloat((v - 0.05).toFixed(2))))
+      } else if (e.key === 'm' || e.key === 'M') {
+        toggleMute()
+      } else if (e.key === 'n' || e.key === 'N') {
+        nextTrack()
+      } else if (e.key === 'p' || e.key === 'P') {
+        prevTrack()
+      } else if (e.key === 'l' || e.key === 'L') {
+        if (currentTrack) {
+          toggleFavorite(currentTrack)
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [togglePlay, seekTo, duration, toggleMute, nextTrack, prevTrack, toggleFavorite, currentTrack])
+
   const value = {
     currentTrack,
     isPlaying,
@@ -411,6 +580,10 @@ export const PlayerProvider = ({ children }) => {
     favorites,
     favoriteTracks,
     refreshFavorites: fetchFavorites,
+    authPosterTrack,
+    isAuthPosterOpen,
+    openAuthPoster,
+    closeAuthPoster,
     playTrack,
     togglePlay,
     seekTo,

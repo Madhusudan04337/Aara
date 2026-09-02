@@ -1,0 +1,19 @@
+{
+  "name": "Aara - Web Player",
+  "short_name": "Aara",
+  "description": "Music player and streaming web application featuring trending songs, category browsing, artist libraries, playlists, and Jamendo music integration.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#121212",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["music", "entertainment", "audio"]
+}

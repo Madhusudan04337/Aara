@@ -281,7 +281,7 @@ const CategorySessionView = () => {
                   <div className="card-info">
                     <h3
                       className="card-title"
-                      style={{ color: active ? '#1ed760' : '#ffffff' }}
+                      style={{ color: active ? '#d946ef' : '#ffffff' }}
                       title={song.title}
                     >
                       {song.title}
