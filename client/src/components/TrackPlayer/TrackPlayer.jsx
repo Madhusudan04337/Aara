@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { usePlayer } from '../../context/usePlayer'
+import { handleImageError, DEFAULT_TRACK_ARTWORK } from '../../utils/imageFallback'
 import './TrackPlayer.css'
 
 const formatTime = (timeInSeconds) => {
@@ -81,6 +82,8 @@ function TrackPlayer() {
             src={albumImage}
             alt={`${trackName} cover`}
             className="track-player-bar__cover"
+            referrerPolicy="no-referrer"
+            onError={(e) => handleImageError(e, DEFAULT_TRACK_ARTWORK)}
           />
         ) : (
           <div className="track-player-bar__cover-placeholder">

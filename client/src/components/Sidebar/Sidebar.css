@@ -447,6 +447,14 @@
   background-color: #1a1a1a;
 }
 
+.sidebar-playlist-item--active {
+  background-color: #242424;
+}
+
+.sidebar-playlist-item--active .sidebar-playlist-name {
+  color: #1ed760;
+}
+
 .sidebar-playlist-art {
   width: 48px;
   height: 48px;

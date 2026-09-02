@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { PlayerContext } from './playerContextDef'
 import { useAuth } from './useAuth'
+import { DEFAULT_TRACK_ARTWORK } from '../utils/imageFallback'
 
 const normalizeTrack = (track) => {
   if (!track) return null
@@ -10,7 +11,7 @@ const normalizeTrack = (track) => {
     jamendoTrackId: id,
     title: track.title || track.name || 'Unknown Track',
     artist: track.artist || track.artist_name || track.artistName || 'Unknown Artist',
-    artworkUrl: track.artworkUrl || track.album_image || track.imageUrl || track.image || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500',
+    artworkUrl: track.artworkUrl || track.album_image || track.imageUrl || track.image || DEFAULT_TRACK_ARTWORK,
     audioUrl: track.audioUrl || track.audio || 'https://prod-1.storage.jamendo.com/?trackid=1885448&format=mp31&from=app-dev',
     licenseUrl: track.licenseUrl || track.license_ccurl || 'https://creativecommons.org/licenses/by-nc-sa/3.0/',
     duration: typeof track.duration === 'number' ? track.duration : 0,
@@ -39,6 +40,15 @@ export const PlayerProvider = ({ children }) => {
     try {
       const storageKey = user?.id ? `aara_favorites_${user.id}` : 'aara_favorites_guest'
       const saved = localStorage.getItem(storageKey) || localStorage.getItem('aara_favorites')
+      return saved ? JSON.parse(saved) : []
+    } catch {
+      return []
+    }
+  })
+  const [favoriteTracks, setFavoriteTracks] = useState(() => {
+    try {
+      const storageKey = user?.id ? `aara_favorite_tracks_${user.id}` : 'aara_favorite_tracks_guest'
+      const saved = localStorage.getItem(storageKey) || localStorage.getItem('aara_favorite_tracks')
       return saved ? JSON.parse(saved) : []
     } catch {
       return []
@@ -203,8 +213,12 @@ export const PlayerProvider = ({ children }) => {
     }
 
     const onError = (e) => {
-      console.warn('Audio playback error:', e)
+      console.warn('Audio playback error on track:', stateRef.current.currentTrack?.title, e)
       setIsPlaying(false)
+      const { queue: q, queueIndex: qIdx } = stateRef.current
+      if (q.length > 1 && qIdx < q.length - 1) {
+        setTimeout(() => nextTrack(), 300)
+      }
     }
 
     audio.addEventListener('timeupdate', onTimeUpdate)
@@ -233,48 +247,67 @@ export const PlayerProvider = ({ children }) => {
     localStorage.setItem('aara_volume', String(volume))
   }, [volume, isMuted])
 
-  // Sync favorites with user-scoped local storage
+  // Sync favorites & favoriteTracks with user-scoped local storage
   useEffect(() => {
-    const storageKey = user?.id ? `aara_favorites_${user.id}` : 'aara_favorites_guest'
-    localStorage.setItem(storageKey, JSON.stringify(favorites))
-  }, [favorites, user?.id])
+    const idsKey = user?.id ? `aara_favorites_${user.id}` : 'aara_favorites_guest'
+    const tracksKey = user?.id ? `aara_favorite_tracks_${user.id}` : 'aara_favorite_tracks_guest'
+    localStorage.setItem(idsKey, JSON.stringify(favorites))
+    localStorage.setItem(tracksKey, JSON.stringify(favoriteTracks))
+  }, [favorites, favoriteTracks, user?.id])
 
   // Load initial favorites from backend API if authenticated or load guest storage
-  useEffect(() => {
-    let isCurrent = true
-    const fetchFavorites = async () => {
-      if (!token) {
-        try {
-          const guestSaved = localStorage.getItem('aara_favorites_guest') || localStorage.getItem('aara_favorites')
-          if (guestSaved && isCurrent) {
-            setFavorites(JSON.parse(guestSaved))
-          } else if (isCurrent) {
-            setFavorites([])
-          }
-        } catch {
-          if (isCurrent) setFavorites([])
-        }
-        return
-      }
-
+  const fetchFavorites = useCallback(async () => {
+    if (!token) {
       try {
-        const res = await fetch('/api/v1/favorites', {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-        const data = await res.json()
-        if (isCurrent && data.success && Array.isArray(data.data)) {
-          const ids = data.data.map(item => String(item.track?.jamendoTrackId || item.track?.id || item._id))
-          setFavorites(ids)
+        const guestIdsSaved = localStorage.getItem('aara_favorites_guest') || localStorage.getItem('aara_favorites')
+        const guestTracksSaved = localStorage.getItem('aara_favorite_tracks_guest') || localStorage.getItem('aara_favorite_tracks')
+        if (guestIdsSaved) {
+          setFavorites(JSON.parse(guestIdsSaved))
+        } else {
+          setFavorites([])
         }
-      } catch (err) {
-        console.warn('Could not fetch user favorites:', err)
+        if (guestTracksSaved) {
+          setFavoriteTracks(JSON.parse(guestTracksSaved))
+        } else {
+          setFavoriteTracks([])
+        }
+      } catch {
+        setFavorites([])
+        setFavoriteTracks([])
       }
+      return
     }
-    fetchFavorites()
-    return () => {
-      isCurrent = false
+
+    try {
+      const res = await fetch('/api/v1/favorites', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      const data = await res.json()
+      if (data.success && Array.isArray(data.data)) {
+        const tracks = data.data
+          .map(item => {
+            const rawTrack = item.track || item
+            const id = String(rawTrack.jamendoTrackId || rawTrack.id || item._id)
+            return {
+              ...normalizeTrack(rawTrack),
+              id,
+              jamendoTrackId: id,
+              createdAt: item.createdAt || rawTrack.createdAt || new Date().toISOString()
+            }
+          })
+          .filter(Boolean)
+
+        setFavoriteTracks(tracks)
+        setFavorites(tracks.map(t => String(t.id)))
+      }
+    } catch (err) {
+      console.warn('Could not fetch user favorites:', err)
     }
   }, [token])
+
+  useEffect(() => {
+    fetchFavorites()
+  }, [fetchFavorites])
 
   const togglePlay = useCallback(() => {
     if (!audioRef.current || !currentTrack) return
@@ -320,8 +353,13 @@ export const PlayerProvider = ({ children }) => {
     const id = norm.id
 
     const exists = favorites.includes(id)
-    const updated = exists ? favorites.filter(fId => fId !== id) : [...favorites, id]
-    setFavorites(updated)
+    if (exists) {
+      setFavorites(prev => prev.filter(fId => fId !== id))
+      setFavoriteTracks(prev => prev.filter(t => t.id !== id))
+    } else {
+      setFavorites(prev => [...prev, id])
+      setFavoriteTracks(prev => [{ ...norm, createdAt: new Date().toISOString() }, ...prev.filter(t => t.id !== id)])
+    }
 
     if (!token) return
 
@@ -371,6 +409,8 @@ export const PlayerProvider = ({ children }) => {
     queue,
     queueIndex,
     favorites,
+    favoriteTracks,
+    refreshFavorites: fetchFavorites,
     playTrack,
     togglePlay,
     seekTo,

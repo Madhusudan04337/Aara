@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/useAuth'
 import { usePlayer } from '../../context/usePlayer'
 import './Sidebar.css'
 
 const Sidebar = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const { token, isAuthenticated } = useAuth()
-  const { favorites, playTrack } = usePlayer()
+  const { favorites, favoriteTracks, playTrack } = usePlayer()
 
   const [sidebarWidth, setSidebarWidth] = useState(320)
   const [isResizing, setIsResizing] = useState(false)
@@ -275,27 +276,51 @@ const Sidebar = () => {
             {isAuthenticated ? (
               <div className="user-library-list">
                 {/* Liked Songs Entry */}
-                <div className="sidebar-playlist-item" id="item-liked-songs">
+                <div 
+                  className={`sidebar-playlist-item ${location.pathname === '/liked-songs' || location.pathname === '/collection/tracks' ? 'sidebar-playlist-item--active' : ''}`} 
+                  id="item-liked-songs"
+                  onClick={() => navigate('/liked-songs')}
+                  title="View Liked Songs"
+                >
                   <div className="sidebar-playlist-art sidebar-playlist-art--liked">
                     <i className="fa-solid fa-heart" />
                   </div>
                   <div className="sidebar-playlist-info">
                     <span className="sidebar-playlist-name">Liked Songs</span>
                     <span className="sidebar-playlist-meta">
-                      <i className="fa-solid fa-thumbtack sidebar-pinned-icon" /> Playlist • {favorites.length} songs
+                      <i className="fa-solid fa-thumbtack sidebar-pinned-icon" /> Playlist • {favorites.length} {favorites.length === 1 ? 'song' : 'songs'}
                     </span>
                   </div>
+                  {favorites.length > 0 && (
+                    <div className="sidebar-playlist-actions">
+                      <button
+                        className="sidebar-playlist-play-btn"
+                        title="Play Liked Songs"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          if (favoriteTracks.length > 0) {
+                            playTrack(favoriteTracks[0], favoriteTracks)
+                          }
+                        }}
+                      >
+                        <i className="fa-solid fa-play" />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* User Created Playlists */}
                 {playlists.map((pl) => {
                   const plId = pl._id || pl.id
                   const trackCount = pl.tracks ? pl.tracks.length : 0
+                  const isPlActive = location.pathname === `/playlist/${plId}`
                   return (
                     <div 
                       key={plId} 
-                      className="sidebar-playlist-item"
+                      className={`sidebar-playlist-item ${isPlActive ? 'sidebar-playlist-item--active' : ''}`}
                       id={`item-playlist-${plId}`}
+                      onClick={() => navigate(`/playlist/${plId}`)}
+                      title={pl.name}
                     >
                       <div className="sidebar-playlist-art">
                         <i className="fa-solid fa-music" />
@@ -349,6 +374,28 @@ const Sidebar = () => {
               </div>
             ) : (
               <>
+                {/* Liked Songs for Guest if they have liked songs */}
+                {favorites.length > 0 && (
+                  <div className="user-library-list" style={{ marginBottom: '1rem' }}>
+                    <div 
+                      className={`sidebar-playlist-item ${location.pathname === '/liked-songs' ? 'sidebar-playlist-item--active' : ''}`} 
+                      id="item-liked-songs-guest"
+                      onClick={() => navigate('/liked-songs')}
+                      title="View Liked Songs"
+                    >
+                      <div className="sidebar-playlist-art sidebar-playlist-art--liked">
+                        <i className="fa-solid fa-heart" />
+                      </div>
+                      <div className="sidebar-playlist-info">
+                        <span className="sidebar-playlist-name">Liked Songs</span>
+                        <span className="sidebar-playlist-meta">
+                          <i className="fa-solid fa-thumbtack sidebar-pinned-icon" /> Playlist • {favorites.length} {favorites.length === 1 ? 'song' : 'songs'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Create Playlist Card for Guest */}
                 <div className="playlist" id="card-create-playlist">
                   <div className="playlist-content">

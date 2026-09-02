@@ -52,11 +52,13 @@ router.post('/', async (req, res) => {
     const jamendoTrackId = String(track.jamendoTrackId || track.id);
     const trackSnapshot = {
       jamendoTrackId,
-      title: track.title || track.name,
-      artistName: track.artistName || track.artist_name,
-      artworkUrl: track.artworkUrl || track.album_image,
-      audioUrl: track.audioUrl || track.audio,
-      licenseUrl: track.licenseUrl || track.license_ccurl,
+      title: track.title || track.name || 'Unknown Track',
+      artistName: track.artistName || track.artist_name || track.artist || 'Unknown Artist',
+      artist: track.artist || track.artistName || track.artist_name || 'Unknown Artist',
+      artworkUrl: track.artworkUrl || track.album_image || track.imageUrl || track.image || '',
+      audioUrl: track.audioUrl || track.audio || '',
+      licenseUrl: track.licenseUrl || track.license_ccurl || '',
+      duration: typeof track.duration === 'number' ? track.duration : 0,
       source: 'jamendo'
     };
 

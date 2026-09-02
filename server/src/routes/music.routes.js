@@ -1,5 +1,5 @@
 import express from 'express';
-import { searchJamendoTracks, getJamendoTrackById, getTrendingJamendoTracks } from '../services/jamendo.service.js';
+import { searchJamendoTracks, getJamendoTrackById, getTrendingJamendoTracks, searchJamendoArtists } from '../services/jamendo.service.js';
 
 const router = express.Router();
 
@@ -7,7 +7,7 @@ const router = express.Router();
 const searchCache = new Map();
 const CACHE_TTL = 300 * 1000; // 5 minutes
 
-// GET /api/v1/music/trending
+// GET /api/v1/music/trending?limit=20&page=1
 router.get('/trending', async (req, res) => {
   try {
     const limit = Math.min(Number(req.query.limit) || 20, 50);
@@ -21,7 +21,7 @@ router.get('/trending', async (req, res) => {
       return res.json({
         success: true,
         data: cached.data,
-        meta: { page, limit, cached: true },
+        meta: { page, limit, cached: true, hasMore: cached.data.length === limit },
       });
     }
 
@@ -31,12 +31,49 @@ router.get('/trending', async (req, res) => {
     res.json({
       success: true,
       data: tracks,
-      meta: { page, limit, count: tracks.length },
+      meta: { page, limit, count: tracks.length, hasMore: tracks.length === limit },
     });
   } catch (error) {
     res.status(502).json({
       success: false,
       message: 'Unable to fetch trending music from Jamendo',
+      error: error.message,
+    });
+  }
+});
+
+// GET /api/v1/music/artists?q=query&limit=20&page=1
+router.get('/artists', async (req, res) => {
+  try {
+    const query = req.query.q?.trim() || req.query.query?.trim() || '';
+    const limit = Math.min(Number(req.query.limit) || 20, 50);
+    const page = Number(req.query.page) || 1;
+    const offset = (page - 1) * limit;
+
+    const cacheKey = `artists:${query}:${limit}:${offset}`;
+    const cached = searchCache.get(cacheKey);
+
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return res.json({
+        success: true,
+        data: cached.data,
+        meta: { page, limit, cached: true, hasMore: cached.data.length === limit },
+      });
+    }
+
+    const artists = await searchJamendoArtists(query, limit, offset);
+    searchCache.set(cacheKey, { timestamp: Date.now(), data: artists });
+
+    res.json({
+      success: true,
+      data: artists,
+      meta: { page, limit, count: artists.length, hasMore: artists.length === limit },
+    });
+  } catch (error) {
+    console.error('Jamendo Artists Error:', error.message);
+    res.status(502).json({
+      success: false,
+      message: 'Unable to fetch artists from Jamendo API',
       error: error.message,
     });
   }
@@ -64,7 +101,7 @@ router.get('/search', async (req, res) => {
       return res.json({
         success: true,
         data: cached.data,
-        meta: { page, limit, cached: true },
+        meta: { page, limit, cached: true, hasMore: cached.data.length === limit },
       });
     }
 
@@ -76,7 +113,7 @@ router.get('/search', async (req, res) => {
     res.json({
       success: true,
       data: tracks,
-      meta: { page, limit, count: tracks.length },
+      meta: { page, limit, count: tracks.length, hasMore: tracks.length === limit },
     });
   } catch (error) {
     console.error('Jamendo Search Error:', error.message);

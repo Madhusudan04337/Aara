@@ -8,9 +8,11 @@ export const trackSnapshotSchema = new mongoose.Schema(
     },
     title: String,
     artistName: String,
+    artist: String,
     artworkUrl: String,
     audioUrl: String,
     licenseUrl: String,
+    duration: Number,
     source: {
       type: String,
       default: 'jamendo',

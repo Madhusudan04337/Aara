@@ -6,6 +6,8 @@ import Header from './components/Header/Header'
 import Sidebar from './components/Sidebar/Sidebar'
 import MainContent from './components/MainContent/MainContent'
 import CategorySessionView from './components/CategorySessionView/CategorySessionView'
+import LikedSongsView from './components/LikedSongsView/LikedSongsView'
+import PlaylistView from './components/PlaylistView/PlaylistView'
 import SignupPage from './components/Auth/SignupPage'
 import LoginPage from './components/Auth/LoginPage'
 import PlayerBar from './components/PlayerBar/PlayerBar'
@@ -38,6 +40,9 @@ function App() {
                           element={<MainContent searchQuery={searchQuery} />}
                         />
                         <Route path="/session/:id" element={<CategorySessionView />} />
+                        <Route path="/liked-songs" element={<LikedSongsView />} />
+                        <Route path="/collection/tracks" element={<LikedSongsView />} />
+                        <Route path="/playlist/:id" element={<PlaylistView />} />
                       </Routes>
                     </div>
                   </main>
