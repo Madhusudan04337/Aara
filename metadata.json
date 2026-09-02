@@ -1,0 +1,6 @@
+{
+  "name": "Aara - Web Player",
+  "description": "Music player and streaming web application featuring trending songs, category browsing, artist libraries, playlists, and Jamendo music integration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

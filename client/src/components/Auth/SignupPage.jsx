@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import AaraLogo from '../AaraLogo/AaraLogo'
+import { useAuth } from '../../context/useAuth'
 import './SignupPage.css'
 
 const SignupPage = () => {
   const navigate = useNavigate()
+  const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [step, setStep] = useState(1) // Step 1: Email, Step 2: Password/Name
   const [password, setPassword] = useState('')
@@ -24,7 +26,7 @@ const SignupPage = () => {
     setError(null)
 
     try {
-      const res = await fetch('http://localhost:5000/api/v1/auth/register', {
+      const res = await fetch('/api/v1/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, name }),
@@ -33,14 +35,13 @@ const SignupPage = () => {
       const data = await res.json()
       if (data.success) {
         if (data.data?.token) {
-          localStorage.setItem('aara_token', data.data.token)
-          localStorage.setItem('aara_user', JSON.stringify(data.data.user))
+          login(data.data.token, data.data.user)
         }
         navigate('/')
       } else {
         setError(data.message || 'Signup failed')
       }
-    } catch (err) {
+    } catch {
       setError('Server error. Please check your backend connection.')
     } finally {
       setLoading(false)

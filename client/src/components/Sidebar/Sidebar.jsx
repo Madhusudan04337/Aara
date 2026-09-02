@@ -1,13 +1,27 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../context/useAuth'
+import { usePlayer } from '../../context/usePlayer'
 import './Sidebar.css'
 
 const Sidebar = () => {
   const navigate = useNavigate()
+  const { token, isAuthenticated } = useAuth()
+  const { favorites, playTrack } = usePlayer()
+
   const [sidebarWidth, setSidebarWidth] = useState(320)
   const [isResizing, setIsResizing] = useState(false)
   const [showCreateMenu, setShowCreateMenu] = useState(false)
   const [showAuthTooltip, setShowAuthTooltip] = useState(false)
+  
+  // Playlist state
+  const [playlists, setPlaylists] = useState([])
+  const [loadingPlaylists, setLoadingPlaylists] = useState(false)
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [newPlaylistName, setNewPlaylistName] = useState('')
+  const [newPlaylistDesc, setNewPlaylistDesc] = useState('')
+  const [creatingPlaylist, setCreatingPlaylist] = useState(false)
+
   const sidebarRef = useRef(null)
 
   const MIN_WIDTH = 320
@@ -51,6 +65,38 @@ const Sidebar = () => {
     }
   }, [isResizing])
 
+  useEffect(() => {
+    let isMounted = true
+    const loadPlaylists = async () => {
+      if (!token) {
+        if (isMounted) setPlaylists([])
+        return
+      }
+
+      try {
+        setLoadingPlaylists(true)
+        const res = await fetch('/api/v1/playlists', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        })
+        const data = await res.json()
+        if (isMounted && data.success && Array.isArray(data.data)) {
+          setPlaylists(data.data)
+        }
+      } catch (err) {
+        console.warn('Error fetching playlists:', err)
+      } finally {
+        if (isMounted) setLoadingPlaylists(false)
+      }
+    }
+
+    loadPlaylists()
+    return () => {
+      isMounted = false
+    }
+  }, [token])
+
   const handleCreateClick = () => {
     setShowCreateMenu(prev => !prev)
     setShowAuthTooltip(false)
@@ -58,7 +104,69 @@ const Sidebar = () => {
 
   const handleCreatePlaylistAction = () => {
     setShowCreateMenu(false)
-    setShowAuthTooltip(true)
+    if (!isAuthenticated) {
+      setShowAuthTooltip(true)
+    } else {
+      setNewPlaylistName(`My Playlist #${playlists.length + 1}`)
+      setNewPlaylistDesc('')
+      setShowCreateModal(true)
+    }
+  }
+
+  const handleCreatePlaylistSubmit = async (e) => {
+    e.preventDefault()
+    if (!newPlaylistName.trim() || !token) return
+
+    try {
+      setCreatingPlaylist(true)
+      const res = await fetch('/api/v1/playlists', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: newPlaylistName.trim(),
+          description: newPlaylistDesc.trim(),
+        })
+      })
+      const data = await res.json()
+      if (data.success && data.data) {
+        setPlaylists(prev => [data.data, ...prev])
+        setShowCreateModal(false)
+      }
+    } catch (err) {
+      console.warn('Playlist creation failed:', err)
+    } finally {
+      setCreatingPlaylist(false)
+    }
+  }
+
+  const handleDeletePlaylist = async (e, playlistId) => {
+    e.stopPropagation()
+    if (!token || !window.confirm('Are you sure you want to delete this playlist?')) return
+
+    try {
+      const res = await fetch(`/api/v1/playlists/${playlistId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+      const data = await res.json()
+      if (data.success) {
+        setPlaylists(prev => prev.filter(p => (p._id || p.id) !== playlistId))
+      }
+    } catch (err) {
+      console.warn('Failed to delete playlist:', err)
+    }
+  }
+
+  const handlePlayPlaylist = (e, playlist) => {
+    e.stopPropagation()
+    if (playlist.tracks && playlist.tracks.length > 0) {
+      playTrack(playlist.tracks[0], playlist.tracks)
+    }
   }
 
   return (
@@ -72,7 +180,7 @@ const Sidebar = () => {
       {/* Library Header */}
       <div className="library">
         <div className="library-header" style={{ position: 'relative' }}>
-          <div className="library-title">
+          <div className="library-title" onClick={() => navigate('/')}>
             <i className="fa-solid fa-book-open" aria-hidden="true" />
             <p>Your Library</p>
           </div>
@@ -98,7 +206,7 @@ const Sidebar = () => {
             </span>
           </button>
 
-          {/* SPOTIFY-STYLE CREATE MENU DROPDOWN (Screenshot 2) */}
+          {/* SPOTIFY-STYLE CREATE MENU DROPDOWN */}
           {showCreateMenu && (
             <div className="create-menu-dropdown">
               <div className="create-menu-item" onClick={handleCreatePlaylistAction}>
@@ -133,8 +241,8 @@ const Sidebar = () => {
             </div>
           )}
 
-          {/* BLUE CREATE PLAYLIST AUTH TOOLTIP (Screenshot 1) */}
-          {showAuthTooltip && (
+          {/* BLUE CREATE PLAYLIST AUTH TOOLTIP */}
+          {showAuthTooltip && !isAuthenticated && (
             <div className="create-auth-tooltip">
               <div className="create-auth-tooltip__arrow" />
               <h3 className="create-auth-tooltip__title">Create a playlist</h3>
@@ -148,7 +256,7 @@ const Sidebar = () => {
                 </button>
                 <button
                   className="create-auth-tooltip__btn-login"
-                  onClick={() => navigate('/signup')}
+                  onClick={() => navigate('/login')}
                 >
                   Log in
                 </button>
@@ -164,37 +272,116 @@ const Sidebar = () => {
         <div className="box-music">
           <div className="content-scroll">
 
-            {/* Create Playlist Card */}
-            <div className="playlist" id="card-create-playlist">
-              <div className="playlist-content">
-                <span className="title">Create your first playlist</span>
-                <br />
-                <span className="desc">It&apos;s easy, we&apos;ll help you</span>
-              </div>
-              <div>
-                <button
-                  className="btn"
-                  id="btn-create-playlist"
-                  onClick={handleCreatePlaylistAction}
-                >
-                  <span>Create playlist</span>
-                </button>
-              </div>
-            </div>
+            {isAuthenticated ? (
+              <div className="user-library-list">
+                {/* Liked Songs Entry */}
+                <div className="sidebar-playlist-item" id="item-liked-songs">
+                  <div className="sidebar-playlist-art sidebar-playlist-art--liked">
+                    <i className="fa-solid fa-heart" />
+                  </div>
+                  <div className="sidebar-playlist-info">
+                    <span className="sidebar-playlist-name">Liked Songs</span>
+                    <span className="sidebar-playlist-meta">
+                      <i className="fa-solid fa-thumbtack sidebar-pinned-icon" /> Playlist • {favorites.length} songs
+                    </span>
+                  </div>
+                </div>
 
-            {/* Browse Podcasts Card */}
-            <div className="playlist" id="card-browse-podcasts">
-              <div className="playlist-content">
-                <span className="title">Let&apos;s find some podcasts to follow</span>
-                <br />
-                <span className="desc">We&apos;ll keep you updated on new episodes</span>
+                {/* User Created Playlists */}
+                {playlists.map((pl) => {
+                  const plId = pl._id || pl.id
+                  const trackCount = pl.tracks ? pl.tracks.length : 0
+                  return (
+                    <div 
+                      key={plId} 
+                      className="sidebar-playlist-item"
+                      id={`item-playlist-${plId}`}
+                    >
+                      <div className="sidebar-playlist-art">
+                        <i className="fa-solid fa-music" />
+                      </div>
+                      <div className="sidebar-playlist-info">
+                        <span className="sidebar-playlist-name">{pl.name}</span>
+                        <span className="sidebar-playlist-meta">
+                          Playlist • {trackCount} {trackCount === 1 ? 'song' : 'songs'}
+                        </span>
+                      </div>
+                      <div className="sidebar-playlist-actions">
+                        {trackCount > 0 && (
+                          <button
+                            className="sidebar-playlist-play-btn"
+                            title="Play playlist"
+                            onClick={(e) => handlePlayPlaylist(e, pl)}
+                          >
+                            <i className="fa-solid fa-play" />
+                          </button>
+                        )}
+                        <button
+                          className="sidebar-playlist-delete-btn"
+                          title="Delete playlist"
+                          onClick={(e) => handleDeletePlaylist(e, plId)}
+                        >
+                          <i className="fa-solid fa-trash-can" />
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+
+                {playlists.length === 0 && !loadingPlaylists && (
+                  <div className="playlist" id="card-create-first-playlist">
+                    <div className="playlist-content">
+                      <span className="title">Create your first playlist</span>
+                      <br />
+                      <span className="desc">It&apos;s easy, we&apos;ll help you</span>
+                    </div>
+                    <div>
+                      <button
+                        className="btn"
+                        id="btn-create-first-playlist"
+                        onClick={handleCreatePlaylistAction}
+                      >
+                        <span>Create playlist</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="playlist-add-btn">
-                <button className="btn" id="btn-browse-podcasts">
-                  <span>Browse podcasts</span>
-                </button>
-              </div>
-            </div>
+            ) : (
+              <>
+                {/* Create Playlist Card for Guest */}
+                <div className="playlist" id="card-create-playlist">
+                  <div className="playlist-content">
+                    <span className="title">Create your first playlist</span>
+                    <br />
+                    <span className="desc">It&apos;s easy, we&apos;ll help you</span>
+                  </div>
+                  <div>
+                    <button
+                      className="btn"
+                      id="btn-create-playlist"
+                      onClick={handleCreatePlaylistAction}
+                    >
+                      <span>Create playlist</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Browse Podcasts Card */}
+                <div className="playlist" id="card-browse-podcasts">
+                  <div className="playlist-content">
+                    <span className="title">Let&apos;s find some podcasts to follow</span>
+                    <br />
+                    <span className="desc">We&apos;ll keep you updated on new episodes</span>
+                  </div>
+                  <div className="playlist-add-btn">
+                    <button className="btn" id="btn-browse-podcasts">
+                      <span>Browse podcasts</span>
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
 
           </div>
         </div>
@@ -238,6 +425,63 @@ const Sidebar = () => {
         onMouseDown={startResizing}
         title="Drag to resize sidebar"
       />
+
+      {/* Create Playlist Modal */}
+      {showCreateModal && (
+        <div className="sidebar-modal-overlay" onClick={() => setShowCreateModal(false)}>
+          <div className="sidebar-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="sidebar-modal-header">
+              <h3>Create Playlist</h3>
+              <button 
+                className="sidebar-modal-close"
+                onClick={() => setShowCreateModal(false)}
+              >
+                <i className="fa-solid fa-xmark" />
+              </button>
+            </div>
+            <form onSubmit={handleCreatePlaylistSubmit} className="sidebar-modal-form">
+              <div className="sidebar-modal-field">
+                <label htmlFor="playlist-name-input">Name</label>
+                <input
+                  id="playlist-name-input"
+                  type="text"
+                  value={newPlaylistName}
+                  onChange={(e) => setNewPlaylistName(e.target.value)}
+                  placeholder="My Playlist"
+                  required
+                  autoFocus
+                />
+              </div>
+              <div className="sidebar-modal-field">
+                <label htmlFor="playlist-desc-input">Description</label>
+                <textarea
+                  id="playlist-desc-input"
+                  value={newPlaylistDesc}
+                  onChange={(e) => setNewPlaylistDesc(e.target.value)}
+                  placeholder="Give your playlist a catchy description"
+                  rows={3}
+                />
+              </div>
+              <div className="sidebar-modal-actions">
+                <button
+                  type="button"
+                  className="sidebar-modal-cancel"
+                  onClick={() => setShowCreateModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="sidebar-modal-submit"
+                  disabled={creatingPlaylist || !newPlaylistName.trim()}
+                >
+                  {creatingPlaylist ? 'Creating...' : 'Create'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </aside>
   )
 }

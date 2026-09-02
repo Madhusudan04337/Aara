@@ -3,13 +3,16 @@ import { useNavigate } from 'react-router-dom'
 import './MainContent.css'
 import { staticArtists } from '../../data/artistsData'
 import AaraLogo from '../AaraLogo/AaraLogo'
+import { usePlayer } from '../../context/usePlayer'
 
 const SHOW_ALL_THRESHOLD = 5
-const API_URL = 'http://localhost:5000/api/songs'
-const SEARCH_API_URL = 'http://localhost:5000/api/v1/music/search'
+const API_URL = '/api/songs'
+const SEARCH_API_URL = '/api/v1/music/search'
 
-const MainContent = ({ searchQuery = '', onSelectTrack }) => {
+const MainContent = ({ searchQuery = '' }) => {
   const navigate = useNavigate()
+  const { playTrack, togglePlay, isTrackActive, isTrackPlaying, toggleFavorite, isFavorite } = usePlayer()
+
   const [songs, setSongs] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -25,17 +28,21 @@ const MainContent = ({ searchQuery = '', onSelectTrack }) => {
 
   // Fetch default songs directly from backend MongoDB API with Jamendo fallback
   useEffect(() => {
+    let isMounted = true
     const fetchSongs = async () => {
       try {
         setLoading(true)
         const res = await fetch(API_URL)
         const data = await res.json()
+        if (!isMounted) return
+
         if (data.success && data.data && data.data.length > 0) {
           setSongs(data.data)
         } else {
           // Fallback to Jamendo trending tracks
-          const trendingRes = await fetch('http://localhost:5000/api/v1/music/trending')
+          const trendingRes = await fetch('/api/v1/music/trending')
           const trendingData = await trendingRes.json()
+          if (!isMounted) return
           if (trendingData.success) {
             setSongs(trendingData.data || [])
           } else {
@@ -43,43 +50,53 @@ const MainContent = ({ searchQuery = '', onSelectTrack }) => {
           }
         }
       } catch (err) {
-        setError('Server connection failed. Make sure the backend server is running.')
+        if (isMounted) {
+          console.warn('Song fetch failed:', err)
+          setError('Server connection failed. Make sure the backend server is running.')
+        }
       } finally {
-        setLoading(false)
+        if (isMounted) setLoading(false)
       }
     }
 
     fetchSongs()
+    return () => { isMounted = false }
   }, [])
 
   // Debounced search logic for Jamendo API
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setSearchResults([])
-      setIsSearching(false)
-      setSearchError(null)
+    const trimmed = searchQuery.trim()
+    if (!trimmed) {
       return
     }
 
+    let isMounted = true
     const timer = setTimeout(async () => {
       try {
         setIsSearching(true)
         setSearchError(null)
-        const res = await fetch(`${SEARCH_API_URL}?q=${encodeURIComponent(searchQuery.trim())}`)
+        const res = await fetch(`${SEARCH_API_URL}?q=${encodeURIComponent(trimmed)}`)
         const data = await res.json()
+        if (!isMounted) return
         if (data.success) {
           setSearchResults(data.data || [])
         } else {
           setSearchError(data.message || 'Search failed')
         }
       } catch (err) {
-        setSearchError('Failed to fetch search results from server')
+        if (isMounted) {
+          console.warn('Search request failed:', err)
+          setSearchError('Failed to fetch search results from server')
+        }
       } finally {
-        setIsSearching(false)
+        if (isMounted) setIsSearching(false)
       }
-    }, 400)
+    }, 350)
 
-    return () => clearTimeout(timer)
+    return () => {
+      isMounted = false
+      clearTimeout(timer)
+    }
   }, [searchQuery])
 
   const updateScrollState = (key) => {
@@ -118,8 +135,37 @@ const MainContent = ({ searchQuery = '', onSelectTrack }) => {
     navigate(`/session/${identifier}`)
   }
 
+  const handleSongPlay = (song, songList = songs) => {
+    const trackObj = {
+      id: song._id || song.id,
+      title: song.title || song.name,
+      artist: song.artist || song.artist_name || song.artistName,
+      artworkUrl: song.imageUrl || song.album_image || song.image,
+      audioUrl: song.audioUrl || song.audio,
+      licenseUrl: song.licenseUrl || song.license_ccurl,
+      duration: song.duration,
+    }
+
+    if (isTrackActive(trackObj)) {
+      togglePlay()
+    } else {
+      const queueList = songList.map((s) => ({
+        id: s._id || s.id,
+        title: s.title || s.name,
+        artist: s.artist || s.artist_name || s.artistName,
+        artworkUrl: s.imageUrl || s.album_image || s.image,
+        audioUrl: s.audioUrl || s.audio,
+        licenseUrl: s.licenseUrl || s.license_ccurl,
+        duration: s.duration,
+      }))
+      playTrack(trackObj, queueList)
+    }
+  }
+
   const trendingScrollState = scrollPositions['trending-songs'] || { canScrollLeft: false, canScrollRight: true }
   const artistsScrollState = scrollPositions['popular-artists'] || { canScrollLeft: false, canScrollRight: true }
+
+  const hasSearchQuery = searchQuery.trim() !== ''
 
   if (error) {
     return (
@@ -134,10 +180,10 @@ const MainContent = ({ searchQuery = '', onSelectTrack }) => {
   return (
     <div className="main-content">
       {/* ── SEARCH RESULTS SECTION (using Header Search input) ── */}
-      {searchQuery.trim() !== '' && (
+      {hasSearchQuery && (
         <section className="content-section">
           <div className="section-header">
-            <h2 className="section-title-static">Search Results for "{searchQuery}"</h2>
+            <h2 className="section-title-static">Search Results for &ldquo;{searchQuery}&rdquo;</h2>
           </div>
 
           {isSearching && <p style={{ color: '#b3b3b3' }}>Searching tracks...</p>}
@@ -153,90 +199,108 @@ const MainContent = ({ searchQuery = '', onSelectTrack }) => {
               className="cards-row"
               style={{ overflowX: 'auto', display: 'flex', gap: '16px', paddingBottom: '12px' }}
             >
-              {searchResults.map((track) => (
-                <div
-                  key={`search-${track.id}`}
-                  className="card"
-                  onClick={() => onSelectTrack && onSelectTrack(track)}
-                  onMouseEnter={() => setHoveredCard(`search-${track.id}`)}
-                  onMouseLeave={() => setHoveredCard(null)}
-                  style={{ cursor: 'pointer', position: 'relative' }}
-                >
-                  <div className="card-image-container">
-                    <img
-                      src={track.album_image || track.artworkUrl}
-                      alt={track.name || track.title}
-                      className="card-image"
-                    />
-                  </div>
-                  <button
-                    className={`play-btn ${
-                      hoveredCard === `search-${track.id}` ? 'play-btn--visible' : ''
-                    }`}
-                    aria-label={`Play ${track.name || track.title}`}
+              {searchResults.map((track) => {
+                const trackId = track.id || track._id
+                const active = isTrackActive(track)
+                const playing = isTrackPlaying(track)
+                const favorited = isFavorite(trackId)
+
+                return (
+                  <div
+                    key={`search-${trackId}`}
+                    className={`card ${active ? 'card--active' : ''}`}
+                    onClick={() => handleSongPlay(track, searchResults)}
+                    onMouseEnter={() => setHoveredCard(`search-${trackId}`)}
+                    onMouseLeave={() => setHoveredCard(null)}
+                    style={{ cursor: 'pointer', position: 'relative' }}
                   >
-                    <i className="fa-solid fa-play" />
-                  </button>
-                  <div className="card-info">
-                    <h3 className="card-title" title={track.name || track.title}>
-                      {track.name || track.title}
-                    </h3>
-                    <p className="card-subtitle" title={track.artist_name || track.artistName}>
-                      {track.artist_name || track.artistName}
-                    </p>
-                    {track.album_name && (
-                      <p style={{ fontSize: '11px', color: '#a7a7a7', margin: '2px 0 0 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={track.album_name}>
-                        Album: {track.album_name}
-                      </p>
-                    )}
-                    {track.duration > 0 && (
-                      <p style={{ fontSize: '11px', color: '#a7a7a7', margin: '2px 0 0 0' }}>
-                        Duration: {Math.floor(track.duration / 60)}:{String(track.duration % 60).padStart(2, '0')}
-                      </p>
-                    )}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
-                      {(track.license_ccurl || track.licenseUrl) && (
-                        <a
-                          href={track.license_ccurl || track.licenseUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          style={{ fontSize: '11px', color: '#1db954', textDecoration: 'underline' }}
-                        >
-                          CC License
-                        </a>
-                      )}
-                      <button
-                        aria-label="Add to favorites"
-                        onClick={async (e) => {
-                          e.stopPropagation()
-                          try {
-                            await fetch('http://localhost:5000/api/v1/favorites', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ track })
-                            })
-                            alert('Saved to favorites!')
-                          } catch (err) {
-                            console.error('Failed to save favorite:', err)
-                          }
-                        }}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          color: '#b3b3b3',
-                          cursor: 'pointer',
-                          fontSize: '14px',
-                          padding: '2px 4px'
-                        }}
-                        title="Save to favorites"
+                    <div className="card-image-container">
+                      <img
+                        src={track.album_image || track.artworkUrl}
+                        alt={track.name || track.title}
+                        className="card-image"
+                      />
+                    </div>
+                    <button
+                      className={`play-btn ${
+                        hoveredCard === `search-${trackId}` || active ? 'play-btn--visible' : ''
+                      }`}
+                      aria-label={playing ? 'Pause' : 'Play'}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleSongPlay(track, searchResults)
+                      }}
+                    >
+                      <i className={playing ? 'fa-solid fa-pause' : 'fa-solid fa-play'} />
+                    </button>
+                    <div className="card-info">
+                      <h3
+                        className="card-title"
+                        style={{ color: active ? '#1ed760' : '#ffffff' }}
+                        title={track.name || track.title}
                       >
-                        <i className="fa-regular fa-heart" />
-                      </button>
+                        {track.name || track.title}
+                      </h3>
+                      <p className="card-subtitle" title={track.artist_name || track.artistName}>
+                        {track.artist_name || track.artistName}
+                      </p>
+                      {track.album_name && (
+                        <p
+                          style={{
+                            fontSize: '11px',
+                            color: '#a7a7a7',
+                            margin: '2px 0 0 0',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}
+                          title={track.album_name}
+                        >
+                          Album: {track.album_name}
+                        </p>
+                      )}
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          marginTop: '6px',
+                        }}
+                      >
+                        {(track.license_ccurl || track.licenseUrl) && (
+                          <a
+                            href={track.license_ccurl || track.licenseUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            style={{ fontSize: '11px', color: '#1db954', textDecoration: 'underline' }}
+                          >
+                            CC License
+                          </a>
+                        )}
+                        <button
+                          aria-label={favorited ? 'Remove favorite' : 'Add favorite'}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            toggleFavorite(track)
+                          }}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: favorited ? '#1ed760' : '#b3b3b3',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            padding: '2px 4px',
+                          }}
+                          title={favorited ? 'Remove from favorites' : 'Save to favorites'}
+                        >
+                          <i className={favorited ? 'fa-solid fa-heart' : 'fa-regular fa-heart'} />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </section>
@@ -278,7 +342,8 @@ const MainContent = ({ searchQuery = '', onSelectTrack }) => {
           </div>
 
           <p className="home-promo-card__disclaimer">
-            Premium Standard only. ₹799 for 1 year, then ₹139 per month after. Limited Eligibility. <a href="#">Terms apply</a>. Offer ends October 15, 2026.
+            Premium Standard only. ₹799 for 1 year, then ₹139 per month after. Limited Eligibility.{' '}
+            <a href="#">Terms apply</a>. Offer ends October 15, 2026.
           </p>
         </div>
       )}
@@ -312,40 +377,48 @@ const MainContent = ({ searchQuery = '', onSelectTrack }) => {
             ref={(el) => (scrollContainersRef.current['trending-songs'] = el)}
             onScroll={() => handleScroll('trending-songs')}
           >
-            {songs.map((song) => (
-              <div
-                key={`trending-${song._id || song.id}`}
-                className="card"
-                onClick={() =>
-                  onSelectTrack &&
-                  onSelectTrack({
-                    name: song.title,
-                    artist_name: song.artist,
-                    album_image: song.imageUrl,
-                    audio: song.audioUrl,
-                  })
-                }
-                onMouseEnter={() => setHoveredCard(`trending-${song._id || song.id}`)}
-                onMouseLeave={() => setHoveredCard(null)}
-                style={{ cursor: 'pointer' }}
-              >
-                <div className="card-image-container">
-                  <img src={song.imageUrl || song.image} alt={song.title} className="card-image" />
-                </div>
-                <button
-                  className={`play-btn ${
-                    hoveredCard === `trending-${song._id || song.id}` ? 'play-btn--visible' : ''
-                  }`}
-                  aria-label={`Play ${song.title}`}
+            {songs.map((song) => {
+              const songId = song._id || song.id
+              const active = isTrackActive(song)
+              const playing = isTrackPlaying(song)
+
+              return (
+                <div
+                  key={`trending-${songId}`}
+                  className={`card ${active ? 'card--active' : ''}`}
+                  onClick={() => handleSongPlay(song, songs)}
+                  onMouseEnter={() => setHoveredCard(`trending-${songId}`)}
+                  onMouseLeave={() => setHoveredCard(null)}
+                  style={{ cursor: 'pointer' }}
                 >
-                  <i className="fa-solid fa-play" />
-                </button>
-                <div className="card-info">
-                  <h3 className="card-title" title={song.title}>{song.title}</h3>
-                  <p className="card-subtitle" title={song.artist}>{song.artist}</p>
+                  <div className="card-image-container">
+                    <img src={song.imageUrl || song.image} alt={song.title} className="card-image" />
+                  </div>
+                  <button
+                    className={`play-btn ${
+                      hoveredCard === `trending-${songId}` || active ? 'play-btn--visible' : ''
+                    }`}
+                    aria-label={playing ? `Pause ${song.title}` : `Play ${song.title}`}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleSongPlay(song, songs)
+                    }}
+                  >
+                    <i className={playing ? 'fa-solid fa-pause' : 'fa-solid fa-play'} />
+                  </button>
+                  <div className="card-info">
+                    <h3
+                      className="card-title"
+                      style={{ color: active ? '#1ed760' : '#ffffff' }}
+                      title={song.title}
+                    >
+                      {song.title}
+                    </h3>
+                    <p className="card-subtitle" title={song.artist}>{song.artist}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
 
           {trendingScrollState.canScrollRight && (
@@ -395,6 +468,8 @@ const MainContent = ({ searchQuery = '', onSelectTrack }) => {
                 className="card card--artist"
                 onMouseEnter={() => setHoveredCard(`artist-${artist.id}`)}
                 onMouseLeave={() => setHoveredCard(null)}
+                onClick={() => handleShowAll(2)}
+                style={{ cursor: 'pointer' }}
               >
                 <div className="card-image-container card-image-container--round">
                   <img src={artist.image} alt={artist.name} className="card-image" />
@@ -403,9 +478,9 @@ const MainContent = ({ searchQuery = '', onSelectTrack }) => {
                   className={`play-btn ${
                     hoveredCard === `artist-${artist.id}` ? 'play-btn--visible' : ''
                   }`}
-                  aria-label={`Play ${artist.name}`}
+                  aria-label={`View artist ${artist.name}`}
                 >
-                  <i className="fa-solid fa-play" />
+                  <i className="fa-solid fa-arrow-right" />
                 </button>
                 <div className="card-info">
                   <h3 className="card-title" title={artist.name}>{artist.name}</h3>

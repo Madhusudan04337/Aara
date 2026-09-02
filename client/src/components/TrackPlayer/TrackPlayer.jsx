@@ -1,52 +1,246 @@
-function TrackPlayer({ track }) {
-  if (!track) {
-    return <p className="track-player-empty">Select a track to play.</p>;
+import { useState, useRef } from 'react'
+import { usePlayer } from '../../context/usePlayer'
+import './TrackPlayer.css'
+
+const formatTime = (timeInSeconds) => {
+  if (isNaN(timeInSeconds) || timeInSeconds < 0) return '0:00'
+  const minutes = Math.floor(timeInSeconds / 60)
+  const seconds = Math.floor(timeInSeconds % 60)
+  return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`
+}
+
+function TrackPlayer() {
+  const {
+    currentTrack,
+    isPlaying,
+    currentTime,
+    duration,
+    volume,
+    isMuted,
+    isShuffle,
+    repeatMode,
+    togglePlay,
+    seekTo,
+    setPlayerVolume,
+    toggleMute,
+    nextTrack,
+    prevTrack,
+    toggleShuffle,
+    toggleRepeat,
+    toggleFavorite,
+    isFavorite,
+  } = usePlayer()
+
+  const [isSeeking, setIsSeeking] = useState(false)
+  const [seekValue, setSeekValue] = useState(0)
+  const progressBarRef = useRef(null)
+
+  if (!currentTrack) {
+    return null
   }
 
-  const trackName = track.name || track.title || 'Unknown Track';
-  const artistName = track.artist_name || track.artistName || 'Unknown Artist';
-  const albumImage = track.album_image || track.artworkUrl;
-  const audioUrl = track.audio || track.audioUrl;
-  const licenseUrl = track.license_ccurl || track.licenseUrl;
+  const isLiked = isFavorite(currentTrack.id)
+  const trackName = currentTrack.title || 'Unknown Track'
+  const artistName = currentTrack.artist || 'Unknown Artist'
+  const albumImage = currentTrack.artworkUrl
+  const licenseUrl = currentTrack.licenseUrl
+
+  const progressPercent = duration > 0 ? ((isSeeking ? seekValue : currentTime) / duration) * 100 : 0
+  const volumePercent = isMuted ? 0 : volume * 100
+
+  const handleSeekChange = (e) => {
+    const newTime = parseFloat(e.target.value)
+    setSeekValue(newTime)
+  }
+
+  const handleSeekStart = () => {
+    setIsSeeking(true)
+    setSeekValue(currentTime)
+  }
+
+  const handleSeekEnd = () => {
+    setIsSeeking(false)
+    seekTo(seekValue)
+  }
+
+  const handleVolumeChange = (e) => {
+    setPlayerVolume(parseFloat(e.target.value))
+  }
+
+  const handleHeartClick = (e) => {
+    e.stopPropagation()
+    toggleFavorite(currentTrack)
+  }
 
   return (
-    <div className="track-player-container">
-      {albumImage && (
-        <img
-          src={albumImage}
-          alt={`${trackName} album artwork`}
-          width="180"
-          className="track-player-img"
-        />
-      )}
-
-      <div className="track-player-info">
-        <h2 className="track-player-title">Track: {trackName}</h2>
-        <p className="track-player-artist">Artist: {artistName}</p>
-        <p className="track-player-attribution">Music provided by Jamendo</p>
-
-        {audioUrl ? (
-          <audio controls autoPlay key={audioUrl} preload="metadata" className="track-player-audio">
-            <source src={audioUrl} type="audio/mpeg" />
-            Your browser does not support audio playback.
-          </audio>
+    <div className="track-player-bar" role="region" aria-label="Audio player">
+      {/* ── LEFT: TRACK INFO ── */}
+      <div className="track-player-bar__left">
+        {albumImage ? (
+          <img
+            src={albumImage}
+            alt={`${trackName} cover`}
+            className="track-player-bar__cover"
+          />
         ) : (
-          <p className="track-player-unavailable">Audio is unavailable for this track.</p>
+          <div className="track-player-bar__cover-placeholder">
+            <i className="fa-solid fa-music" />
+          </div>
         )}
 
+        <div className="track-player-bar__meta">
+          <span className="track-player-bar__title" title={trackName}>
+            {trackName}
+          </span>
+          <span className="track-player-bar__artist" title={artistName}>
+            {artistName}
+          </span>
+        </div>
+
+        <button
+          className={`track-player-bar__fav-btn ${isLiked ? 'track-player-bar__fav-btn--active' : ''}`}
+          onClick={handleHeartClick}
+          aria-label={isLiked ? 'Remove from favorites' : 'Add to favorites'}
+          title={isLiked ? 'Saved to Favorites' : 'Save to Favorites'}
+        >
+          <i className={isLiked ? 'fa-solid fa-heart' : 'fa-regular fa-heart'} />
+        </button>
+      </div>
+
+      {/* ── CENTER: PLAYBACK CONTROLS & TIMELINE ── */}
+      <div className="track-player-bar__center">
+        <div className="track-player-bar__controls">
+          <button
+            className={`track-player-bar__control-btn ${isShuffle ? 'track-player-bar__control-btn--active' : ''}`}
+            onClick={toggleShuffle}
+            title={isShuffle ? 'Disable shuffle' : 'Enable shuffle'}
+            aria-label="Shuffle"
+          >
+            <i className="fa-solid fa-shuffle" />
+          </button>
+
+          <button
+            className="track-player-bar__control-btn"
+            onClick={prevTrack}
+            title="Previous"
+            aria-label="Previous track"
+          >
+            <i className="fa-solid fa-backward-step" />
+          </button>
+
+          <button
+            className="track-player-bar__play-btn"
+            onClick={togglePlay}
+            title={isPlaying ? 'Pause' : 'Play'}
+            aria-label={isPlaying ? 'Pause' : 'Play'}
+          >
+            <i className={isPlaying ? 'fa-solid fa-pause' : 'fa-solid fa-play'} />
+          </button>
+
+          <button
+            className="track-player-bar__control-btn"
+            onClick={nextTrack}
+            title="Next"
+            aria-label="Next track"
+          >
+            <i className="fa-solid fa-forward-step" />
+          </button>
+
+          <button
+            className={`track-player-bar__control-btn ${repeatMode !== 'off' ? 'track-player-bar__control-btn--active' : ''}`}
+            onClick={toggleRepeat}
+            title={`Repeat: ${repeatMode}`}
+            aria-label="Repeat"
+          >
+            <i className="fa-solid fa-repeat" />
+            {repeatMode === 'one' && <span className="track-player-bar__repeat-one">1</span>}
+          </button>
+        </div>
+
+        <div className="track-player-bar__timeline">
+          <span className="track-player-bar__time">
+            {formatTime(isSeeking ? seekValue : currentTime)}
+          </span>
+
+          <div className="track-player-bar__slider-wrapper" ref={progressBarRef}>
+            <input
+              type="range"
+              min="0"
+              max={duration || 100}
+              step="0.1"
+              value={isSeeking ? seekValue : currentTime}
+              onChange={handleSeekChange}
+              onMouseDown={handleSeekStart}
+              onTouchStart={handleSeekStart}
+              onMouseUp={handleSeekEnd}
+              onTouchEnd={handleSeekEnd}
+              className="track-player-bar__slider"
+              aria-label="Track progress"
+            />
+            <div
+              className="track-player-bar__slider-progress"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+
+          <span className="track-player-bar__time">
+            {formatTime(duration)}
+          </span>
+        </div>
+      </div>
+
+      {/* ── RIGHT: ATTRIBUTION & VOLUME ── */}
+      <div className="track-player-bar__right">
         {licenseUrl && (
           <a
             href={licenseUrl}
             target="_blank"
             rel="noreferrer"
-            className="track-player-license"
+            className="track-player-bar__license-tag"
+            title="Creative Commons licensed via Jamendo"
           >
-            View license
+            <span>Jamendo CC</span>
           </a>
         )}
+
+        <div className="track-player-bar__volume-container">
+          <button
+            className="track-player-bar__control-btn"
+            onClick={toggleMute}
+            aria-label={isMuted || volume === 0 ? 'Unmute' : 'Mute'}
+            title={isMuted ? 'Unmute' : 'Mute'}
+          >
+            <i
+              className={
+                isMuted || volume === 0
+                  ? 'fa-solid fa-volume-xmark'
+                  : volume < 0.5
+                  ? 'fa-solid fa-volume-low'
+                  : 'fa-solid fa-volume-high'
+              }
+            />
+          </button>
+
+          <div className="track-player-bar__volume-slider-wrapper">
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={isMuted ? 0 : volume}
+              onChange={handleVolumeChange}
+              className="track-player-bar__volume-slider"
+              aria-label="Volume control"
+            />
+            <div
+              className="track-player-bar__volume-progress"
+              style={{ width: `${volumePercent}%` }}
+            />
+          </div>
+        </div>
       </div>
     </div>
-  );
+  )
 }
 
-export default TrackPlayer;
+export default TrackPlayer

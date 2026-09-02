@@ -1,12 +1,16 @@
+import { useNavigate } from 'react-router-dom'
+import { usePlayer } from '../../context/usePlayer'
 import TrackPlayer from '../TrackPlayer/TrackPlayer'
-import '../TrackPlayer/TrackPlayer.css'
 import './PlayerBar.css'
 
-const PlayerBar = ({ currentTrack }) => {
+const PlayerBar = () => {
+  const navigate = useNavigate()
+  const { currentTrack } = usePlayer()
+
   return (
     <div className="player-bar" role="contentinfo">
       {currentTrack ? (
-        <TrackPlayer track={currentTrack} />
+        <TrackPlayer />
       ) : (
         <aside>
           <div className="signup-bar">
@@ -14,7 +18,11 @@ const PlayerBar = ({ currentTrack }) => {
               <p>Preview of Aara</p>
               <p>Sign up to get unlimited songs and podcasts with occasional ads. No credit card needed.</p>
             </div>
-            <button className="btn btn--large" id="btn-signup-free">
+            <button
+              className="btn btn--large"
+              id="btn-signup-free"
+              onClick={() => navigate('/signup')}
+            >
               <span>Sign up free</span>
             </button>
           </div>
