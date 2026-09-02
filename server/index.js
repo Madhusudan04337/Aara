@@ -4,8 +4,6 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { createServer as createViteServer } from 'vite'
-
 import songRoutes from './routes/songRoutes.js'
 import musicRoutes from './src/routes/music.routes.js'
 import favoriteRoutes from './routes/favoriteRoutes.js'
@@ -21,7 +19,7 @@ const rootDir = path.resolve(__dirname, '..')
 const clientDir = path.resolve(rootDir, 'client')
 
 const app = express()
-const PORT = 3000
+const PORT = process.env.PORT || 3000
 
 // CRITICAL: fail fast on Mongoose commands if DB is offline
 mongoose.set('bufferCommands', false)
@@ -57,6 +55,7 @@ app.use((err, req, res, next) => {
 async function start() {
   // Vite Dev Server or Production Static Serving
   if (process.env.NODE_ENV !== 'production') {
+    const { createServer: createViteServer } = await import('vite')
     const vite = await createViteServer({
       root: clientDir,
       server: {
