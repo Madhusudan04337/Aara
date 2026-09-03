@@ -69,10 +69,15 @@ async function start() {
     app.use(vite.middlewares)
   } else {
     const distDir = path.resolve(clientDir, 'dist')
+    const indexPath = path.resolve(distDir, 'index.html')
     app.use(express.static(distDir))
     app.use((req, res, next) => {
       if (req.method === 'GET' && !req.path.startsWith('/api')) {
-        res.sendFile(path.resolve(distDir, 'index.html'))
+        res.sendFile(indexPath, (err) => {
+          if (err && !res.headersSent) {
+            res.status(404).send('Client build files not found. If this is a standalone backend API deployment, access /api endpoints. Otherwise, run npm run build.')
+          }
+        })
       } else {
         next()
       }
